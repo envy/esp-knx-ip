@@ -1,7 +1,7 @@
 /**
  * esp-knx-ip library for KNX/IP communication on an ESP8266
  * Author: Nico Weichbrodt <envy>
- * Licence: Not yet decided on one...
+ * License: Not yet decided on one...
  */
 
 #include "esp-knx-ip.h"
@@ -16,7 +16,7 @@ ESPKNXIP::ESPKNXIP(uint8_t area, uint8_t line, uint8_t member)
 
 void ESPKNXIP::setup()
 {
-  udp.beginMulticast(WiFi.localIP(),  IPAddress(224, 0, 23, 12), 3671);
+  udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
 }
 
 uint16_t ESPKNXIP::ntohs(uint16_t n)
@@ -38,7 +38,7 @@ int ESPKNXIP::register_GA_callback(uint8_t area, uint8_t line, uint8_t member, G
 
 void ESPKNXIP::send(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t data_len, uint8_t *data)
 {
-  uint32_t len = 6 + 2 + 8 + data_len + 1;
+  uint32_t len = 6 + 2 + 8 + data_len + 1; // knx_pkt + cemi_msg + cemi_service + data + checksum
   DEBUG_PRINT(F("Creating packet with len "));
   DEBUG_PRINTLN(len)
   uint8_t buf[len];
@@ -69,6 +69,8 @@ void ESPKNXIP::send(uint8_t area, uint8_t line, uint8_t member, knx_command_type
   cemi_data->pci.tpci = 0x00; // ???
   memcpy(cemi_data->data, data, data_len);
   cemi_data->data[0] = (cemi_data->data[0] & 0x3F) | ((ct & 0x03) << 6);
+
+  // Calculate checksum, which is just XOR of all bytes
   uint8_t cs = buf[0] ^ buf[1];
   for (uint32_t i = 2; i < len - 1; ++i)
   {
@@ -84,9 +86,21 @@ void ESPKNXIP::send(uint8_t area, uint8_t line, uint8_t member, knx_command_type
   }
   DEBUG_PRINTLN(F(""));
 
-  udp.beginPacketMulticast(IPAddress(224, 0, 23, 12), 3671, WiFi.localIP());
+  udp.beginPacketMulticast(MULTICAST_IP, MULTICAST_PORT, WiFi.localIP());
   udp.write(buf, len);
   udp.endPacket();
+}
+
+void ESPKNXIP::sendColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
+{
+  uint8_t buf[] = {0x00, red, green, blue};
+  send(area, line, member, ct, 4, buf);
+}
+
+void ESPKNXIP::sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit)
+{
+  uint8_t buf[] = {bit > 0x00 ? 0x01 : 0x00};
+  send(area, line, member, ct, 1, buf);
 }
 
 void ESPKNXIP::loop()

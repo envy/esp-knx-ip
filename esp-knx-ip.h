@@ -1,28 +1,30 @@
 /**
  * esp-knx-ip library for KNX/IP communication on an ESP8266
  * Author: Nico Weichbrodt <envy>
- * Licence: Not yet decided on one...
+ * License: Not yet decided on one...
  */
-
 
 #ifndef ESP_KNX_IP_H
 #define ESP_KNX_IP_H
 
-#if ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
+#include "Arduino.h"
 #include <ESP8266WiFi.h>
 #include <WifiUDP.h>
 
 #include "DPT.h"
 
-#define MAX_CALLBACKS 10
+/**
+ * CONFIG
+ */
+#define MAX_CALLBACKS 10 // Maximum number of group address callbacks that can be stored
+#define MULTICAST_PORT 3671 // Default KNX/IP port is 3671
+#define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
 // Uncomment to enable printing out debug messages.
 #define ESP_KNX_DEBUG
+/**
+ * END CONFIG
+ */
 
 // Define where debug output will be printed.
 #define DEBUG_PRINTER Serial1
@@ -175,7 +177,7 @@ typedef struct __cemi_service
   address_t source;
   address_t destination;
   uint8_t data_len; // length of data, excluding the tpci byte
-  union
+  struct
   {
     uint8_t apci:2;
     uint8_t tpci:6;
@@ -204,6 +206,9 @@ class ESPKNXIP {
    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb);
 
    void send(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
+
+   void sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit);
+   void sendColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
 
   private:
     address_t physaddr;
