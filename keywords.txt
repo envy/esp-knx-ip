@@ -1,0 +1,11 @@
+# datatypes
+ESPKNXIP	KEYWORD1
+address_t	KEYWORD1
+GACallback	KEYWORD1
+
+# methods
+setup KEYWORD2
+loop KEYWORD2
+register_GA_callback KEYWORD2
+send KEYWORD2
+
