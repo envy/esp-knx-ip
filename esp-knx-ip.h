@@ -219,7 +219,14 @@ class ESPKNXIP {
    void send(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
    void sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit);
-   void sendColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
+   //void sendBool(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, bool val) __attribute__ ((alias("ESXKNXIP::sendBit")));
+   void send1ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int8_t val);
+   void send2ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int16_t val);
+   void send2ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val);
+   void send3ByteTime(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
+   void send3ByteDate(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
+   void send3ByteColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
+   void send4ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val);
 
   private:
     address_t physaddr;

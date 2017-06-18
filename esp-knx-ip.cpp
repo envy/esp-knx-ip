@@ -93,16 +93,63 @@ void ESPKNXIP::send(uint8_t area, uint8_t line, uint8_t member, knx_command_type
   udp.endPacket();
 }
 
-void ESPKNXIP::sendColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
+void ESPKNXIP::sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit)
+{
+  uint8_t buf[] = {bit > 0x00 ? 0x01 : 0x00};
+  send(area, line, member, ct, 1, buf);
+}
+
+void ESPKNXIP::send1ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int8_t val)
+{
+  uint8_t buf[] = {0x00, (uint8_t)val};
+  send(area, line, member, ct, 2, buf);
+}
+
+void ESPKNXIP::send2ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int16_t val)
+{
+  uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
+  send(area, line, member, ct, 3, buf);
+}
+
+void ESPKNXIP::send2ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val)
+{
+  float v = val * 100.0f;
+  int e = 0;
+  for (; v < -2048.0f; v /= 2)
+    ++e;
+  for (; v > 2047.0f; v /= 2)
+    ++e;
+  long m = round(v) & 0x7FF;
+  short msb = (short) (e << 3 | m >> 8);
+  if (val < 0.0f)
+    msb |= 0x80;
+  uint8_t buf[] = {0x00, (uint8_t)msb, (uint8_t)m};
+  send(area, line, member, ct, 3, buf);
+}
+
+void ESPKNXIP::send3ByteTime(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
+{
+  weekday <<= 5;
+  uint8_t buf[] = {0x00, (((weekday << 5) & 0xE0) + (hours & 0x1F)), minutes & 0x3F, seconds & 0x3F};
+  send(area, line, member, ct, 4, buf);
+}
+
+void ESPKNXIP::send3ByteDate(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
+{
+  uint8_t buf[] = {0x00, day & 0x1F, month & 0x0F, year};
+  send(area, line, member, ct, 4, buf);
+}
+
+void ESPKNXIP::send3ByteColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
 {
   uint8_t buf[] = {0x00, red, green, blue};
   send(area, line, member, ct, 4, buf);
 }
 
-void ESPKNXIP::sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit)
+void ESPKNXIP::send4ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val)
 {
-  uint8_t buf[] = {bit > 0x00 ? 0x01 : 0x00};
-  send(area, line, member, ct, 1, buf);
+  uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
+  send(area, line, member, ct, 5, buf);
 }
 
 void ESPKNXIP::loop()
