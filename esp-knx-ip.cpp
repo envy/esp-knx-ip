@@ -7,15 +7,16 @@
 #include "esp-knx-ip.h"
 
 
-ESPKNXIP::ESPKNXIP(uint8_t area, uint8_t line, uint8_t member)
+ESPKNXIP::ESPKNXIP()
+{
+
+}
+
+void ESPKNXIP::setup(uint8_t area, uint8_t line, uint8_t member)
 {
   this->registered_callbacks = 0;
   this->physaddr.bytes.high = (area << 4) | line;
   this->physaddr.bytes.low = member;
-}
-
-void ESPKNXIP::setup()
-{
   udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
 }
 
