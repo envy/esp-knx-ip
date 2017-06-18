@@ -67,7 +67,8 @@ void ESPKNXIP::send(uint8_t area, uint8_t line, uint8_t member, knx_command_type
   cemi_data->destination.bytes.low = member;
   cemi_data->data_len = data_len;
   cemi_data->pci.apci = (ct & 0x0C) >> 2;
-  cemi_data->pci.tpci = 0x00; // ???
+  cemi_data->pci.tpci_seq_number = 0x00; // ???
+  cemi_data->pci.tpci_comm_type = KNX_COT_UDP; // ???
   memcpy(cemi_data->data, data, data_len);
   cemi_data->data[0] = (cemi_data->data[0] & 0x3F) | ((ct & 0x03) << 6);
 

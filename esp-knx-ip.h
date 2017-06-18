@@ -189,8 +189,9 @@ typedef struct __cemi_service
   uint8_t data_len; // length of data, excluding the tpci byte
   struct
   {
-    uint8_t apci:2;
-    uint8_t tpci:6;
+    uint8_t apci:2; // If tpci.comm_type == KNX_COT_UCD or KNX_COT_NCD, then this is apparently control data?
+    uint8_t tpci_seq_number:4;
+    uint8_t tpci_comm_type:2; // See knx_communication_type_t
   } pci;
   uint8_t data[];
 } cemi_service_t;
@@ -210,8 +211,8 @@ typedef void (*GACallback)(knx_command_type_t ct, uint8_t data_len, uint8_t *dat
 
 class ESPKNXIP {
   public:
-   ESPKNXIP(uint8_t area, uint8_t line, uint8_t member);
-   void setup();
+   ESPKNXIP();
+   void setup(uint8_t area, uint8_t line, uint8_t member);
    void loop();
    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb);
 
