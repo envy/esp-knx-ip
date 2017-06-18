@@ -210,3 +210,6 @@ void ESPKNXIP::loop()
 
   return;
 }
+
+// Global "singleton" object
+ESPKNXIP knx;
