@@ -8,15 +8,19 @@
 #define ESP_KNX_IP_H
 
 #include "Arduino.h"
+#include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <WifiUDP.h>
+#include <ESP8266WebServer.h>
 
 #include "DPT.h"
 
 /**
  * CONFIG
  */
-#define MAX_CALLBACKS 10 // Maximum number of group address callbacks that can be stored
+#define MAX_GA_CALLBACKS 10 // Maximum number of group address callbacks that can be stored
+#define MAX_CALLBACKS 10 // Maximum number of callbacks that can be stored
+#define MAX_GAS 10 // Maximum number of configurable GAs that can be stored
 #define MULTICAST_PORT 3671 // Default KNX/IP port is 3671
 #define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
@@ -25,6 +29,8 @@
 /**
  * END CONFIG
  */
+
+#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8) + (MAX_GAS))
 
 // Define where debug output will be printed.
 #define DEBUG_PRINTER Serial1
@@ -211,35 +217,69 @@ typedef void (*GACallback)(knx_command_type_t ct, uint8_t data_len, uint8_t *dat
 
 class ESPKNXIP {
   public:
-   ESPKNXIP();
-   void setup(uint8_t area, uint8_t line, uint8_t member);
-   void loop();
-   int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb);
+    ESPKNXIP();
+    void setup();
+    void loop();
 
-   void send(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
+    void save_to_eeprom();
+    void restore_from_eeprom();
 
-   void sendBit(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t bit);
-   //void sendBool(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, bool val) __attribute__ ((alias("ESXKNXIP::sendBit")));
-   void send1ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int8_t val);
-   void send2ByteInt(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, int16_t val);
-   void send2ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val);
-   void send3ByteTime(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
-   void send3ByteDate(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
-   void send3ByteColor(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
-   void send4ByteFloat(uint8_t area, uint8_t line, uint8_t member, knx_command_type_t ct, float val);
+    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb);
+    int delete_GA_callback(int id);
+    int register_callback(String name, GACallback cb);
+    int register_callback(const char *name, GACallback cb);
+    int register_GA(String name);
+    address_t get_GA(int id);
 
+    void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
+
+    void sendBit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
+    void send1ByteInt(address_t const &receiver, knx_command_type_t ct, int8_t val);
+    void send2ByteInt(address_t const &receiver, knx_command_type_t ct, int16_t val);
+    void send2ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
+    void send3ByteTime(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
+    void send3ByteDate(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
+    void send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
+    void send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
+
+    static address_t GA_to_address(uint8_t area, uint8_t line, uint8_t member)
+    {
+      address_t tmp;
+      tmp.bytes.high = (area << 3) | line;
+      tmp.bytes.low = member;
+      return tmp;
+    }
   private:
+    void __loop_knx();
+
+    // Webserver functions
+    void __loop_webserver();
+    void __handle_root();
+    void __handle_register();
+    void __handle_delete();
+    void __handle_set(bool phys);
+    void __handle_eeprom();
+
+    ESP8266WebServer server;
     address_t physaddr;
     WiFiUDP udp;
+
+    // Here we store the actual mapping from configured GA to callback
+    uint8_t registered_ga_callbacks;
+    address_t ga_callback_addrs[MAX_GA_CALLBACKS];
+    GACallback ga_callbacks[MAX_GA_CALLBACKS];
+
+    // Here the developer stores the callbacks that can be mapped to GAs
     uint8_t registered_callbacks;
-    address_t ga_callback_addrs[MAX_CALLBACKS];
-    GACallback ga_callbacks[MAX_CALLBACKS];
+    GACallback callbacks[MAX_CALLBACKS];
+    String callback_names[MAX_CALLBACKS];
+
+    // Here the developer can store additional GAs mapped to ints so that they can use them as destination
+    uint8_t registered_gas;
+    address_t gas[MAX_GAS];
+    String ga_names[MAX_GAS];
 
     uint16_t ntohs(uint16_t);
-    static bool compareGA(uint8_t ga1[2], uint8_t ga2[2])
-    {
-      return ga1[0] == ga2[0] && ga1[1] == ga2[1];
-    }
 };
 
 // Global "singleton" object
