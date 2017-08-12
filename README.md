@@ -16,20 +16,29 @@ const char* pass = "my-pw";    // your network password
 
 int my_GA;
 
+config_id_t param_id;
+
 void setup()
 {
-	WiFi.begin(ssid, pass);
-	while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
-	}
-
-	knx.setup(); // Setup library
-
 	// Register a callback that is called when a configurable group address is receiving a telegram
 	knx.register_callback("callback_name", my_callback);
 
 	// Register a configurable group address for sending out answers
 	my_GA = knx.register_GA("answer GA");
+
+	int default_val = 21;
+	param_id = knx.register_config_int("My Parameter", default_val);
+
+	knx.load(); // Try to load a config from EEPROM
+
+	WiFi.begin(ssid, pass);
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(500);
+	}
+
+	knx.start(); // Start everything. Must be called after WiFi connection has been established
+
+
 }
 
 void loop()
@@ -50,7 +59,8 @@ void my_callback(knx_command_type_t ct, address_t const &received_on, uint8_t da
 		break;
 	case KNX_CT_READ:
 		// Answer with a value
-		knx.send1ByteInt(received_on, KNX_CT_ANSWER, 21);
+		int value = knx.get_config_int(param_id);
+		knx.send1ByteInt(received_on, KNX_CT_ANSWER, (uint8_t)value);
 		break;
 	}
 }
