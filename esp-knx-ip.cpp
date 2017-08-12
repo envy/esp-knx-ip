@@ -329,6 +329,11 @@ void ESPKNXIP::restore_from_eeprom()
   DEBUG_PRINTLN(address, HEX);
 }
 
+int ESPKNXIP::first_free_eeprom_address()
+{
+  return sizeof(uint64_t) + sizeof(uint8_t) + (sizeof(address_t) * MAX_GA_CALLBACKS) + (sizeof(callback_id_t) * MAX_GA_CALLBACKS) + (sizeof(address_t) * MAX_GAS) + sizeof(address_t);
+}
+
 uint16_t ESPKNXIP::ntohs(uint16_t n)
 {
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));

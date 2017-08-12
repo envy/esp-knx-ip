@@ -225,6 +225,7 @@ class ESPKNXIP {
 
     void save_to_eeprom();
     void restore_from_eeprom();
+    int first_free_eeprom_address();
 
     int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
     int delete_GA_callback(int id);
