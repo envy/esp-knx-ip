@@ -1,12 +1,19 @@
 # datatypes
-ESPKNXIP	KEYWORD1
+knx			KEYWORD1
 address_t	KEYWORD1
 GACallback	KEYWORD1
+knx_command_type_t KEYWORD1
 
 # methods
 setup KEYWORD2
 loop KEYWORD2
-register_GA_callback KEYWORD2
-send KEYWORD2
-sendColor KEYWORD2
+register_callback KEYWORD2
+register_GA KEYWORD2
 sendBit KEYWORD2
+send1ByteInt KEYWORD2
+send2ByteInt KEYWORD2
+send2ByteFloat KEYWORD2
+send3ByteTime KEYWORD2
+send3ByteDate KEYWORD2
+send3ByteColor KEYWORD2
+send4ByteFloat KEYWORD2

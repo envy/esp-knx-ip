@@ -38,14 +38,19 @@ void loop()
 }
 
 
-void my_callback(knx_command_type_t ct, uint8_t data_len, uint8_t *data)
+void my_callback(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
 {
 	switch (ct)
 	{
 	case KNX_CT_WRITE:
 		// Do something, like a digitalWrite
 		// Or send a telegram like this:
-		knx.sendBit(knx.get_GA(my_GA), KNX_CT_WRITE, 0);
+		uint8_t my_msg = 42;
+		knx.send1ByteInt(knx.get_GA(my_GA), KNX_CT_WRITE, my_msg);
+		break;
+	case KNX_CT_READ:
+		// Answer with a value
+		knx.send1ByteInt(received_on, KNX_CT_ANSWER, 21);
 		break;
 	}
 }
