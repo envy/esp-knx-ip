@@ -9,58 +9,69 @@
 void ESPKNXIP::__handle_root()
 {
   String m = F("<html><body>");
-
-  for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
+  m += F("<h2>KNX Config</h2>");
+  if (registered_ga_callbacks > 0)
   {
-    m += F("<p>");
-    m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
-    m += F("/");
-    m += String(ga_callback_addrs[i].bytes.high & 0x07);
-    m += F("/");
-    m += String(ga_callback_addrs[i].bytes.low);
-    m += F(" : ");
-    m += callback_names[ga_callbacks[i]];
-    m += F("<form action='/delete' method='POST'><input type='hidden' name='id' value='");
-    m += i;
-    m += F("'><input type='submit' value='Delete'></form></p>");
+    m += F("<h4>Callbacks:</h4>");
+    for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
+    {
+      m += F("<p>");
+      m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
+      m += F("/");
+      m += String(ga_callback_addrs[i].bytes.high & 0x07);
+      m += F("/");
+      m += String(ga_callback_addrs[i].bytes.low);
+      m += F(" : ");
+      m += callback_names[ga_callbacks[i]];
+      m += F("<form action='/delete' method='POST'><input type='hidden' name='id' value='");
+      m += i;
+      m += F("'><input type='submit' value='Delete'></form></p>");
+    }
   }
-  m += F("<form action='/register' method='POST'>");
-  m += F("<input type='number' name='area' min='0' max='31'/>/<input type='number' name='line' min='0' max='7'/>/<input type='number' name='member' min='0' max='255'/> -&gt;");
-  m += F("<select name='cb'>");
-  for (uint8_t i = 0; i < registered_callbacks; ++i)
-  {
-    m += F("<option value=\"");
-    m += i;
-    m += F("\">");
-    m += callback_names[i];
-    m += F("</option>");
-  }
-  m += F("</select>");
-  m += F("<input type='submit' value='Register' />");
-  m += F("</form>");
 
-  m += F("<h4>Status GAs:</h4>");
-  for (uint8_t i = 0; i < registered_gas; ++i)
+  if (registered_callbacks > 0)
   {
-    m += F("<p>");
-    m += F("<form action='/set' method='POST'>");
-    m += F("<input type='hidden' name='id' value='");
-    m += i;
-    m += F("'>");
-    m += ga_names[i];
-    m += F(":&nbsp;");
-    m += F("<input type='number' name='area' min='0' max='31' value='");
-    m += String((gas[i].bytes.high & 0xF8) >> 3);
-    m += F("' />/<input type='number' name='line' min='0' max='7' value='");
-    m += String(gas[i].bytes.high & 0x07);
-    m += F("' />/<input type='number' name='member' min='0' max='255' value='");
-    m += String(gas[i].bytes.low);
-    m += F("' /><input type='submit' value='Set' />");
-    m += F("</p>");
+    m += F("<form action='/register' method='POST'>");
+    m += F("<input type='number' name='area' min='0' max='31'/>/<input type='number' name='line' min='0' max='7'/>/<input type='number' name='member' min='0' max='255'/> -&gt;");
+    m += F("<select name='cb'>");
+    for (uint8_t i = 0; i < registered_callbacks; ++i)
+    {
+      m += F("<option value=\"");
+      m += i;
+      m += F("\">");
+      m += callback_names[i];
+      m += F("</option>");
+    }
+    m += F("</select>");
+    m += F("<input type='submit' value='Register' />");
     m += F("</form>");
   }
 
-  m += F("<h4>Physical adress</h4>");
+  if (registered_gas > 0)
+  {
+    m += F("<h4>Status GAs:</h4>");
+    for (uint8_t i = 0; i < registered_gas; ++i)
+    {
+      m += F("<p>");
+      m += F("<form action='/set' method='POST'>");
+      m += F("<input type='hidden' name='id' value='");
+      m += i;
+      m += F("' />");
+      m += ga_names[i];
+      m += F(":&nbsp;");
+      m += F("<input type='number' name='area' min='0' max='31' value='");
+      m += String((gas[i].bytes.high & 0xF8) >> 3);
+      m += F("' />/<input type='number' name='line' min='0' max='7' value='");
+      m += String(gas[i].bytes.high & 0x07);
+      m += F("' />/<input type='number' name='member' min='0' max='255' value='");
+      m += String(gas[i].bytes.low);
+      m += F("' /><input type='submit' value='Set' />");
+      m += F("</form>");
+      m += F("</p>");
+    }
+  }
+
+  m += F("<h4>Physical address</h4>");
   m += F("<p>");
   m += F("<form action='/phys' method='POST'>");
   m += F("<input type='number' name='area' min='0' max='15' value='");
@@ -70,8 +81,39 @@ void ESPKNXIP::__handle_root()
   m += F("' />/<input type='number' name='member' min='0' max='255' value='");
   m += String(physaddr.bytes.low);
   m += F("' /><input type='submit' value='Set' />");
-  m += F("</p>");
   m += F("</form>");
+  m += F("</p>");
+
+  if (registered_configs > 0)
+  {
+    m += F("<h2>Custom Config</h2>");
+
+    for (config_id_t i = 0; i < registered_configs; ++i)
+    {
+      m += F("<p>");
+      m += F("<form action='/config' method='POST'>");
+      m += F("<input type='hidden' name='id' value='");
+      m += i;
+      m += F("' />");
+      m += custom_config_names[i];
+      m += F(":&nbsp;");
+
+      switch (custom_configs[i].type)
+      {
+        case CONFIG_TYPE_STRING:
+          m += F("<input type='text' name='value' value='");
+          m += get_config_string(i);
+          break;
+        case CONFIG_TYPE_INT:
+          m += F("<input type='number' name='value' value='");
+          m += get_config_int(i);
+          break;
+      }
+      m += F("'/><input type='submit' value='Set' />");
+      m += F("</form>");
+      m += F("</p>");
+    }
+  }
 
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='1'><input type='submit' value='Save to EEPROM'></form>");
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='2'><input type='submit' value='Restore from EEPROM'></form>");
@@ -189,6 +231,43 @@ end:
   server.send(301);
 }
 
+void ESPKNXIP::__handle_config()
+{
+  DEBUG_PRINTLN(F("Config called"));
+  if (server.hasArg(F("value")) && server.hasArg(F("id")))
+  {
+    config_id_t id = server.arg(F("id")).toInt();
+
+    DEBUG_PRINT(F("Got args: "));
+    DEBUG_PRINT(id);
+    DEBUG_PRINTLN(F(""));
+
+    if (id < 0 || id >= registered_configs)
+    {
+      DEBUG_PRINTLN(F("ID wrong"));
+      goto end;
+    }
+
+    switch (custom_configs[id].type)
+    {
+      case CONFIG_TYPE_STRING:
+      {
+        String v = server.arg(F("value"));
+        if (v.length() >= custom_configs[id].len)
+          goto end;
+        __config_set_string(id, v);
+      }
+        break;
+      case CONFIG_TYPE_INT:
+        __config_set_int(id, server.arg(F("value")).toInt());
+        break;
+    }
+  }
+end:
+  server.sendHeader(F("Location"),F("/"));
+  server.send(301);
+}
+
 void ESPKNXIP::__handle_eeprom()
 {
   DEBUG_PRINTLN(F("EEPROM called"));
@@ -216,26 +295,22 @@ end:
   server.send(301);
 }
 
-ESPKNXIP::ESPKNXIP() : server(80)
+ESPKNXIP::ESPKNXIP() : server(80), registered_ga_callbacks(0), registered_callbacks(0), registered_gas(0), registered_configs(0)
 {
+  physaddr.value = 0;
+  memset(gas, 0, MAX_GAS * sizeof(address_t));
+  memset(custom_config_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
+  memset(custom_configs, 0, MAX_CONFIGS * sizeof(config_t));
 }
 
-void ESPKNXIP::setup()
+void ESPKNXIP::load()
 {
   EEPROM.begin(512);
-  physaddr.value = 0;
-  registered_ga_callbacks = 0;
-  registered_callbacks = 0;
-  registered_gas = 0;
-  for (uint8_t i = 0; i < MAX_GAS; ++i)
-  {
-    gas[i].value = 0;
-  }
-  //physaddr.bytes.high = (area << 4) | line;
-  //physaddr.bytes.low = member;
-
   restore_from_eeprom();
+}
 
+void ESPKNXIP::start()
+{
   server.on("/", [this](){
     __handle_root();
   });
@@ -253,6 +328,9 @@ void ESPKNXIP::setup()
   });
   server.on("/eeprom", [this](){
     __handle_eeprom();
+  });
+  server.on("/config", [this](){
+    __handle_config();
   });
   server.begin();
 
@@ -279,10 +357,14 @@ void ESPKNXIP::save_to_eeprom()
   for (uint8_t i = 0; i < MAX_GAS; ++i)
   {
     EEPROM.put(address, gas[i]);
-    address += sizeof(address_t); 
+    address += sizeof(address_t);
   }
   EEPROM.put(address, physaddr);
-  address += sizeof(address_t); 
+  address += sizeof(address_t);
+
+  EEPROM.put(address, custom_config_data);
+  address += sizeof(custom_config_data);
+
   EEPROM.commit();
   DEBUG_PRINT("Wrote to EEPROM: 0x");
   DEBUG_PRINTLN(address, HEX);
@@ -325,6 +407,10 @@ void ESPKNXIP::restore_from_eeprom()
   }
   EEPROM.get(address, physaddr);
   address += sizeof(address_t); 
+
+  EEPROM.get(address, custom_config_data);
+  address += sizeof(custom_config_data);
+
   DEBUG_PRINT("Restored from EEPROM: 0x");
   DEBUG_PRINTLN(address, HEX);
 }
@@ -436,6 +522,92 @@ address_t ESPKNXIP::get_GA(int id)
   }
   return gas[id];
 }
+
+/// Custom config
+
+config_id_t ESPKNXIP::register_config_string(String name, uint8_t len, String _default)
+{
+  if (registered_configs >= MAX_CONFIGS)
+    return -1;
+
+  if (_default.length() >= len)
+    return -1;
+
+  config_id_t id = registered_configs;
+  custom_config_names[id] = name;
+
+  custom_configs[id].type = CONFIG_TYPE_STRING;
+  custom_configs[id].len = len;
+  if (id == 0)
+    custom_configs[id].offset = 0;
+  else
+    custom_configs[id].offset = custom_configs[id - 1].offset + custom_configs[id - 1].len;
+
+  __config_set_string(id, _default);
+
+  registered_configs++;
+  return id;
+}
+
+config_id_t ESPKNXIP::register_config_int(String name, int32_t _default)
+{
+  if (registered_configs >= MAX_CONFIGS)
+    return -1;
+
+  config_id_t id = registered_configs;
+  custom_config_names[id] = name;
+
+  custom_configs[id].type = CONFIG_TYPE_INT;
+  custom_configs[id].len = sizeof(int32_t);
+  if (id == 0)
+    custom_configs[id].offset = 0;
+  else
+    custom_configs[id].offset = custom_configs[id - 1].offset + custom_configs[id - 1].len;
+
+  __config_set_int(id, _default);
+
+  registered_configs++;
+  return id;
+}
+
+void ESPKNXIP::__config_set_string(config_id_t id, String val)
+{
+  memcpy(&custom_config_data[custom_configs[id].offset], val.c_str(), val.length()+1);
+}
+
+void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
+{
+  // This does not work for some reason:
+  //int32_t *v = (int32_t *)(custom_config_data + custom_configs[id].offset);
+  //*v = val;
+
+  custom_config_data[custom_configs[id].offset + 0] = (uint8_t)((val & 0xFF000000) >> 24);
+  custom_config_data[custom_configs[id].offset + 1] = (uint8_t)((val & 0x00FF0000) >> 16);
+  custom_config_data[custom_configs[id].offset + 2] = (uint8_t)((val & 0x0000FF00) >>  8);
+  custom_config_data[custom_configs[id].offset + 3] = (uint8_t)((val & 0x000000FF) >>  0);
+}
+
+String ESPKNXIP::get_config_string(config_id_t id)
+{
+  if (id >= registered_configs)
+    return String("");
+
+  return String((char *)&custom_config_data[custom_configs[id].offset]);
+}
+
+int32_t ESPKNXIP::get_config_int(config_id_t id)
+{
+  if (id >= registered_configs)
+    return 0;
+
+  int32_t v = (custom_config_data[custom_configs[id].offset + 0] << 24) +
+              (custom_config_data[custom_configs[id].offset + 1] << 16) +
+              (custom_config_data[custom_configs[id].offset + 2] <<  8) +
+              (custom_config_data[custom_configs[id].offset + 3] <<  0);
+  return v;
+}
+
+/// Send functions
 
 void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data)
 {

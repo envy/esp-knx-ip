@@ -17,10 +17,14 @@
 
 /**
  * CONFIG
+ * All MAX_ values must not exceed 255 and must not be negative!
  */
 #define MAX_GA_CALLBACKS 10 // Maximum number of group address callbacks that can be stored
 #define MAX_CALLBACKS 10 // Maximum number of callbacks that can be stored
 #define MAX_GAS 10 // Maximum number of configurable GAs that can be stored
+#define MAX_CONFIGS 10
+#define MAX_CONFIG_SPACE 100 // Maximum number of bytes that can be stored for custom config
+
 #define MULTICAST_PORT 3671 // Default KNX/IP port is 3671
 #define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
@@ -30,10 +34,12 @@
  * END CONFIG
  */
 
-#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8) + (MAX_GAS))
+#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE << 24) + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8) + (MAX_GAS))
 
 // Define where debug output will be printed.
-#define DEBUG_PRINTER Serial1
+#ifndef DEBUG_PRINTER
+#define DEBUG_PRINTER Serial
+#endif
 
 // Setup debug printing macros.
 #ifdef ESP_KNX_DEBUG
@@ -213,26 +219,47 @@ typedef struct __cemi_msg
   } data;
 } cemi_msg_t;
 
+typedef enum __config_type
+{
+  CONFIG_TYPE_UNKNOWN,
+  CONFIG_TYPE_INT,
+  CONFIG_TYPE_STRING,
+
+} config_type_t;
+
+typedef struct __config
+{
+  config_type_t type;
+  uint8_t offset;
+  uint8_t len;
+} config_t;
+
 typedef uint8_t callback_id_t;
+typedef uint8_t config_id_t;
 
 typedef void (*GACallback)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
 
 class ESPKNXIP {
   public:
     ESPKNXIP();
-    void setup();
+    void load();
+    void start();
     void loop();
 
     void save_to_eeprom();
     void restore_from_eeprom();
     int first_free_eeprom_address();
 
-    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
-    int delete_GA_callback(int id);
     callback_id_t register_callback(String name, GACallback cb);
     callback_id_t register_callback(const char *name, GACallback cb);
     int register_GA(String name);
     address_t get_GA(int id);
+
+    config_id_t register_config_string(String name, uint8_t len, String _default);
+    config_id_t register_config_int(String name, int32_t _default);
+
+    String get_config_string(config_id_t id);
+    int32_t get_config_int(config_id_t id);
 
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
@@ -262,27 +289,35 @@ class ESPKNXIP {
     void __handle_delete();
     void __handle_set(bool phys);
     void __handle_eeprom();
+    void __handle_config();
+
+    void __config_set_string(config_id_t id, String val);
+    void __config_set_int(config_id_t id, int32_t val);
 
     ESP8266WebServer server;
     address_t physaddr;
     WiFiUDP udp;
 
-    // Here we store the actual mapping from configured GA to callback
     uint8_t registered_ga_callbacks;
     address_t ga_callback_addrs[MAX_GA_CALLBACKS];
     callback_id_t ga_callbacks[MAX_GA_CALLBACKS];
 
-    // Here the developer stores the callbacks that can be mapped to GAs
     callback_id_t registered_callbacks;
     GACallback callbacks[MAX_CALLBACKS];
     String callback_names[MAX_CALLBACKS];
 
-    // Here the developer can store additional GAs mapped to ints so that they can use them as destination
     uint8_t registered_gas;
     address_t gas[MAX_GAS];
     String ga_names[MAX_GAS];
 
+    config_id_t registered_configs;
+    uint8_t custom_config_data[MAX_CONFIG_SPACE];
+    String custom_config_names[MAX_CONFIGS];
+    config_t custom_configs[MAX_CONFIGS];
+
     uint16_t ntohs(uint16_t);
+    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
+    int delete_GA_callback(int id);
 };
 
 // Global "singleton" object
