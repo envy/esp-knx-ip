@@ -213,7 +213,9 @@ typedef struct __cemi_msg
   } data;
 } cemi_msg_t;
 
-typedef void (*GACallback)(knx_command_type_t ct, uint8_t data_len, uint8_t *data);
+typedef uint8_t callback_id_t;
+
+typedef void (*GACallback)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
 
 class ESPKNXIP {
   public:
@@ -224,10 +226,10 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb);
+    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
     int delete_GA_callback(int id);
-    int register_callback(String name, GACallback cb);
-    int register_callback(const char *name, GACallback cb);
+    callback_id_t register_callback(String name, GACallback cb);
+    callback_id_t register_callback(const char *name, GACallback cb);
     int register_GA(String name);
     address_t get_GA(int id);
 
@@ -267,10 +269,10 @@ class ESPKNXIP {
     // Here we store the actual mapping from configured GA to callback
     uint8_t registered_ga_callbacks;
     address_t ga_callback_addrs[MAX_GA_CALLBACKS];
-    GACallback ga_callbacks[MAX_GA_CALLBACKS];
+    callback_id_t ga_callbacks[MAX_GA_CALLBACKS];
 
     // Here the developer stores the callbacks that can be mapped to GAs
-    uint8_t registered_callbacks;
+    callback_id_t registered_callbacks;
     GACallback callbacks[MAX_CALLBACKS];
     String callback_names[MAX_CALLBACKS];
 

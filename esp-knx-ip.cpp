@@ -19,14 +19,7 @@ void ESPKNXIP::__handle_root()
     m += F("/");
     m += String(ga_callback_addrs[i].bytes.low);
     m += F(" : ");
-    for (uint8_t j = 0; j < registered_callbacks; ++j)
-    {
-      if (ga_callbacks[i] == callbacks[j])
-      {
-        m += callback_names[j];
-        break;
-      }
-    }
+    m += callback_names[ga_callbacks[i]];
     m += F("<form action='/delete' method='POST'><input type='hidden' name='id' value='");
     m += i;
     m += F("'><input type='submit' value='Delete'></form></p>");
@@ -37,7 +30,7 @@ void ESPKNXIP::__handle_root()
   for (uint8_t i = 0; i < registered_callbacks; ++i)
   {
     m += F("<option value=\"");
-    m += String((uint32_t)callbacks[i]);
+    m += i;
     m += F("\">");
     m += callback_names[i];
     m += F("</option>");
@@ -94,7 +87,7 @@ void ESPKNXIP::__handle_register()
     uint8_t area = server.arg(F("area")).toInt();
     uint8_t line = server.arg(F("line")).toInt();
     uint8_t member = server.arg(F("member")).toInt();
-    uint32_t cb = server.arg(F("cb")).toInt();
+    callback_id_t cb = (callback_id_t)server.arg(F("cb")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(area);
@@ -112,7 +105,13 @@ void ESPKNXIP::__handle_register()
       goto end;
     }
 
-    knx.register_GA_callback(area, line, member, (GACallback)cb);
+    if (cb >= registered_callbacks)
+    {
+      DEBUG_PRINTLN(F("Invalid callback id"));
+      goto end;
+    }
+
+    knx.register_GA_callback(area, line, member, cb);
   }
 end:
   server.sendHeader(F("Location"),F("/"));
@@ -275,7 +274,7 @@ void ESPKNXIP::save_to_eeprom()
   for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
   {
     EEPROM.put(address, ga_callbacks[i]);
-    address += sizeof(GACallback);
+    address += sizeof(callback_id_t);
   }
   for (uint8_t i = 0; i < MAX_GAS; ++i)
   {
@@ -317,7 +316,7 @@ void ESPKNXIP::restore_from_eeprom()
   for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
   {
     EEPROM.get(address, ga_callbacks[i]);
-    address += sizeof(GACallback);
+    address += sizeof(callback_id_t);
   }
   for (uint8_t i = 0; i < MAX_GAS; ++i)
   {
@@ -335,7 +334,7 @@ uint16_t ESPKNXIP::ntohs(uint16_t n)
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));
 }
 
-int ESPKNXIP::register_GA_callback(uint8_t area, uint8_t line, uint8_t member, GACallback cb)
+int ESPKNXIP::register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb)
 {
   if (registered_ga_callbacks >= MAX_GA_CALLBACKS)
     return -1;
@@ -384,7 +383,7 @@ int ESPKNXIP::delete_GA_callback(int id)
   if (len > 0)
   {
     memmove(ga_callback_addrs + dest_offset, ga_callback_addrs + src_offset, len * sizeof(address_t));
-    memmove(ga_callbacks + dest_offset, ga_callbacks + src_offset, len * sizeof(GACallback));
+    memmove(ga_callbacks + dest_offset, ga_callbacks + src_offset, len * sizeof(callback_id_t));
   }
 
   registered_ga_callbacks--;
@@ -392,12 +391,12 @@ int ESPKNXIP::delete_GA_callback(int id)
   return 0;
 }
 
-int ESPKNXIP::register_callback(String name, GACallback cb)
+callback_id_t ESPKNXIP::register_callback(String name, GACallback cb)
 {
   if (registered_callbacks >= MAX_CALLBACKS)
     return -1;
 
-  int id = registered_callbacks;
+  callback_id_t id = registered_callbacks;
 
   callback_names[id] = name;
   callbacks[id] = cb;
@@ -405,7 +404,7 @@ int ESPKNXIP::register_callback(String name, GACallback cb)
   return id;
 }
 
-int ESPKNXIP::register_callback(const char *name, GACallback cb)
+callback_id_t ESPKNXIP::register_callback(const char *name, GACallback cb)
 {
   return register_callback(String(name), cb);
 }
@@ -659,7 +658,7 @@ void ESPKNXIP::__loop_knx()
       uint8_t data[cemi_data->data_len];
       memcpy(data, cemi_data->data, cemi_data->data_len);
       data[0] = data[0] & 0x3F;
-      ga_callbacks[i](ct, cemi_data->data_len, data);
+      callbacks[ga_callbacks[i]](ct, cemi_data->destination, cemi_data->data_len, data);
       return;
     }
   }
