@@ -10,9 +10,11 @@ void ESPKNXIP::__handle_root()
 {
   String m = F("<html><body>");
   m += F("<h2>KNX Config</h2>");
+  if (registered_callbacks > 0)
+    m += F("<h4>Callbacks:</h4>");
+
   if (registered_ga_callbacks > 0)
   {
-    m += F("<h4>Callbacks:</h4>");
     for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
     {
       m += F("<p>");
@@ -103,13 +105,25 @@ void ESPKNXIP::__handle_root()
         case CONFIG_TYPE_STRING:
           m += F("<input type='text' name='value' value='");
           m += get_config_string(i);
+          m += F("' />");
           break;
         case CONFIG_TYPE_INT:
           m += F("<input type='number' name='value' value='");
           m += get_config_int(i);
+          m += F("' />");
+          break;
+        case CONFIG_TYPE_GA:
+          address_t a = get_config_ga(i);
+          m += F("<input type='number' name='area' min='0' max='31' value='");
+          m += String((a.bytes.high & 0xF8) >> 3);
+          m += F("' />/<input type='number' name='line' min='0' max='7' value='");
+          m += String(a.bytes.high & 0x07);
+          m += F("' />/<input type='number' name='member' min='0' max='255' value='");
+          m += String(a.bytes.low);
+          m += F("' />");
           break;
       }
-      m += F("'/><input type='submit' value='Set' />");
+      m += F("<input type='submit' value='Set' />");
       m += F("</form>");
       m += F("</p>");
     }
@@ -234,7 +248,7 @@ end:
 void ESPKNXIP::__handle_config()
 {
   DEBUG_PRINTLN(F("Config called"));
-  if (server.hasArg(F("value")) && server.hasArg(F("id")))
+  if (server.hasArg(F("id")))
   {
     config_id_t id = server.arg(F("id")).toInt();
 
@@ -257,10 +271,23 @@ void ESPKNXIP::__handle_config()
           goto end;
         __config_set_string(id, v);
       }
-        break;
+      break;
       case CONFIG_TYPE_INT:
+      {
         __config_set_int(id, server.arg(F("value")).toInt());
-        break;
+      }
+      break;
+      case CONFIG_TYPE_GA:
+      {
+        uint8_t area = server.arg(F("area")).toInt();
+        uint8_t line = server.arg(F("line")).toInt();
+        uint8_t member = server.arg(F("member")).toInt();
+        address_t tmp;
+        tmp.bytes.high = (area << 3) | line;
+        tmp.bytes.low = member;
+        __config_set_ga(id, tmp);
+      }
+      break;
     }
   }
 end:
@@ -570,6 +597,29 @@ config_id_t ESPKNXIP::register_config_int(String name, int32_t _default)
   return id;
 }
 
+config_id_t ESPKNXIP::register_config_ga(String name)
+{
+  if (registered_configs >= MAX_CONFIGS)
+    return -1;
+
+  config_id_t id = registered_configs;
+  custom_config_names[id] = name;
+
+  custom_configs[id].type = CONFIG_TYPE_GA;
+  custom_configs[id].len = sizeof(address_t);
+  if (id == 0)
+    custom_configs[id].offset = 0;
+  else
+    custom_configs[id].offset = custom_configs[id - 1].offset + custom_configs[id - 1].len;
+
+  address_t t;
+  t.value = 0;
+  __config_set_ga(id, t);
+
+  registered_configs++;
+  return id;
+}
+
 void ESPKNXIP::__config_set_string(config_id_t id, String val)
 {
   memcpy(&custom_config_data[custom_configs[id].offset], val.c_str(), val.length()+1);
@@ -585,6 +635,12 @@ void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
   custom_config_data[custom_configs[id].offset + 1] = (uint8_t)((val & 0x00FF0000) >> 16);
   custom_config_data[custom_configs[id].offset + 2] = (uint8_t)((val & 0x0000FF00) >>  8);
   custom_config_data[custom_configs[id].offset + 3] = (uint8_t)((val & 0x000000FF) >>  0);
+}
+
+void ESPKNXIP::__config_set_ga(config_id_t id, address_t const &val)
+{
+  custom_config_data[custom_configs[id].offset + 0] = val.bytes.high;
+  custom_config_data[custom_configs[id].offset + 1] = val.bytes.low;
 }
 
 String ESPKNXIP::get_config_string(config_id_t id)
@@ -605,6 +661,21 @@ int32_t ESPKNXIP::get_config_int(config_id_t id)
               (custom_config_data[custom_configs[id].offset + 2] <<  8) +
               (custom_config_data[custom_configs[id].offset + 3] <<  0);
   return v;
+}
+
+address_t ESPKNXIP::get_config_ga(config_id_t id)
+{
+  address_t t;
+  if (id >= registered_configs)
+  {
+    t.value = 0;
+    return t;
+  }
+
+  t.bytes.high = custom_config_data[custom_configs[id].offset + 0];
+  t.bytes.low = custom_config_data[custom_configs[id].offset + 1];
+
+  return t;
 }
 
 /// Send functions

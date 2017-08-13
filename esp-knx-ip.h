@@ -29,7 +29,7 @@
 #define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
 // Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
+//#define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
@@ -224,6 +224,7 @@ typedef enum __config_type
   CONFIG_TYPE_UNKNOWN,
   CONFIG_TYPE_INT,
   CONFIG_TYPE_STRING,
+  CONFIG_TYPE_GA,
 
 } config_type_t;
 
@@ -257,9 +258,11 @@ class ESPKNXIP {
 
     config_id_t register_config_string(String name, uint8_t len, String _default);
     config_id_t register_config_int(String name, int32_t _default);
+    config_id_t register_config_ga(String name);
 
     String get_config_string(config_id_t id);
     int32_t get_config_int(config_id_t id);
+    address_t get_config_ga(config_id_t id);
 
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
@@ -293,6 +296,7 @@ class ESPKNXIP {
 
     void __config_set_string(config_id_t id, String val);
     void __config_set_int(config_id_t id, int32_t val);
+    void __config_set_ga(config_id_t id, address_t const &val);
 
     ESP8266WebServer server;
     address_t physaddr;
