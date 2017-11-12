@@ -245,6 +245,7 @@ class ESPKNXIP {
     ESPKNXIP();
     void load();
     void start();
+    void start(ESP8266WebServer *srv);
     void loop();
 
     void save_to_eeprom();
@@ -283,6 +284,7 @@ class ESPKNXIP {
       return tmp;
     }
   private:
+    void __start();
     void __loop_knx();
 
     // Webserver functions
@@ -298,7 +300,7 @@ class ESPKNXIP {
     void __config_set_int(config_id_t id, int32_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
-    ESP8266WebServer server;
+    ESP8266WebServer *server;
     address_t physaddr;
     WiFiUDP udp;
 

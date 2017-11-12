@@ -78,9 +78,9 @@ void ESPKNXIP::__handle_root()
   m += F("<form action='/phys' method='POST'>");
   m += F("<input type='number' name='area' min='0' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
-  m += F("' />/<input type='number' name='line' min='0' max='15' value='");
+  m += F("' />.<input type='number' name='line' min='0' max='15' value='");
   m += String(physaddr.bytes.high & 0x0F);
-  m += F("' />/<input type='number' name='member' min='0' max='255' value='");
+  m += F("' />.<input type='number' name='member' min='0' max='255' value='");
   m += String(physaddr.bytes.low);
   m += F("' /><input type='submit' value='Set' />");
   m += F("</form>");
@@ -132,18 +132,18 @@ void ESPKNXIP::__handle_root()
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='1'><input type='submit' value='Save to EEPROM'></form>");
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='2'><input type='submit' value='Restore from EEPROM'></form>");
   m += F("</body></html>");
-  server.send(200, F("text/html"), m);
+  server->send(200, F("text/html"), m);
 }
 
 void ESPKNXIP::__handle_register()
 {
   DEBUG_PRINTLN(F("Register called"));
-  if (server.hasArg(F("area")) && server.hasArg(F("line")) && server.hasArg(F("member")) && server.hasArg(F("cb")))
+  if (server->hasArg(F("area")) && server->hasArg(F("line")) && server->hasArg(F("member")) && server->hasArg(F("cb")))
   {
-    uint8_t area = server.arg(F("area")).toInt();
-    uint8_t line = server.arg(F("line")).toInt();
-    uint8_t member = server.arg(F("member")).toInt();
-    callback_id_t cb = (callback_id_t)server.arg(F("cb")).toInt();
+    uint8_t area = server->arg(F("area")).toInt();
+    uint8_t line = server->arg(F("line")).toInt();
+    uint8_t member = server->arg(F("member")).toInt();
+    callback_id_t cb = (callback_id_t)server->arg(F("cb")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(area);
@@ -170,16 +170,16 @@ void ESPKNXIP::__handle_register()
     knx.register_GA_callback(area, line, member, cb);
   }
 end:
-  server.sendHeader(F("Location"),F("/"));
-  server.send(301);
+  server->sendHeader(F("Location"),F("/"));
+  server->send(301);
 }
 
 void ESPKNXIP::__handle_delete()
 {
   DEBUG_PRINTLN(F("Delete called"));
-  if (server.hasArg(F("id")))
+  if (server->hasArg(F("id")))
   {
-    uint8_t id = server.arg(F("id")).toInt();
+    uint8_t id = server->arg(F("id")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(id);
@@ -194,18 +194,18 @@ void ESPKNXIP::__handle_delete()
     knx.delete_GA_callback(id);
   }
 end:
-  server.sendHeader(F("Location"),F("/"));
-  server.send(301);
+  server->sendHeader(F("Location"),F("/"));
+  server->send(301);
 }
 void ESPKNXIP::__handle_set(bool phys)
 {
   DEBUG_PRINTLN(F("Set called"));
-  if (server.hasArg(F("area")) && server.hasArg(F("line")) && server.hasArg(F("member")) && ((!phys && server.hasArg(F("id"))) || phys))
+  if (server->hasArg(F("area")) && server->hasArg(F("line")) && server->hasArg(F("member")) && ((!phys && server->hasArg(F("id"))) || phys))
   {
-    uint8_t area = server.arg(F("area")).toInt();
-    uint8_t line = server.arg(F("line")).toInt();
-    uint8_t member = server.arg(F("member")).toInt();
-    uint32_t id = server.arg(F("id")).toInt();
+    uint8_t area = server->arg(F("area")).toInt();
+    uint8_t line = server->arg(F("line")).toInt();
+    uint8_t member = server->arg(F("member")).toInt();
+    uint32_t id = server->arg(F("id")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(area);
@@ -241,16 +241,16 @@ void ESPKNXIP::__handle_set(bool phys)
     gas[id] = tmp;
   }
 end:
-  server.sendHeader(F("Location"),F("/"));
-  server.send(301);
+  server->sendHeader(F("Location"),F("/"));
+  server->send(301);
 }
 
 void ESPKNXIP::__handle_config()
 {
   DEBUG_PRINTLN(F("Config called"));
-  if (server.hasArg(F("id")))
+  if (server->hasArg(F("id")))
   {
-    config_id_t id = server.arg(F("id")).toInt();
+    config_id_t id = server->arg(F("id")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(id);
@@ -266,7 +266,7 @@ void ESPKNXIP::__handle_config()
     {
       case CONFIG_TYPE_STRING:
       {
-        String v = server.arg(F("value"));
+        String v = server->arg(F("value"));
         if (v.length() >= custom_configs[id].len)
           goto end;
         __config_set_string(id, v);
@@ -274,14 +274,14 @@ void ESPKNXIP::__handle_config()
       break;
       case CONFIG_TYPE_INT:
       {
-        __config_set_int(id, server.arg(F("value")).toInt());
+        __config_set_int(id, server->arg(F("value")).toInt());
       }
       break;
       case CONFIG_TYPE_GA:
       {
-        uint8_t area = server.arg(F("area")).toInt();
-        uint8_t line = server.arg(F("line")).toInt();
-        uint8_t member = server.arg(F("member")).toInt();
+        uint8_t area = server->arg(F("area")).toInt();
+        uint8_t line = server->arg(F("line")).toInt();
+        uint8_t member = server->arg(F("member")).toInt();
         address_t tmp;
         tmp.bytes.high = (area << 3) | line;
         tmp.bytes.low = member;
@@ -291,16 +291,16 @@ void ESPKNXIP::__handle_config()
     }
   }
 end:
-  server.sendHeader(F("Location"),F("/"));
-  server.send(301);
+  server->sendHeader(F("Location"),F("/"));
+  server->send(301);
 }
 
 void ESPKNXIP::__handle_eeprom()
 {
   DEBUG_PRINTLN(F("EEPROM called"));
-  if (server.hasArg(F("mode")))
+  if (server->hasArg(F("mode")))
   {
-    uint8_t mode = server.arg(F("mode")).toInt();
+    uint8_t mode = server->arg(F("mode")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(mode);
@@ -318,11 +318,11 @@ void ESPKNXIP::__handle_eeprom()
     }
   }
 end:
-  server.sendHeader(F("Location"),F("/"));
-  server.send(301);
+  server->sendHeader(F("Location"),F("/"));
+  server->send(301);
 }
 
-ESPKNXIP::ESPKNXIP() : server(80), registered_ga_callbacks(0), registered_callbacks(0), registered_gas(0), registered_configs(0)
+ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_gas(0), registered_configs(0)
 {
   physaddr.value = 0;
   memset(gas, 0, MAX_GAS * sizeof(address_t));
@@ -332,34 +332,50 @@ ESPKNXIP::ESPKNXIP() : server(80), registered_ga_callbacks(0), registered_callba
 
 void ESPKNXIP::load()
 {
-  EEPROM.begin(512);
+  EEPROM.begin(1024);
   restore_from_eeprom();
+}
+
+void ESPKNXIP::start(ESP8266WebServer *srv)
+{
+  if (srv == nullptr)
+  {
+    return;
+  }
+  server = srv;
+  __start();
 }
 
 void ESPKNXIP::start()
 {
-  server.on("/", [this](){
+  server = new ESP8266WebServer(80);
+  __start();
+}
+
+void ESPKNXIP::__start()
+{
+  server->on("/", [this](){
     __handle_root();
   });
-  server.on("/register", [this](){
+  server->on("/register", [this](){
     __handle_register();
   });
-  server.on("/delete", [this](){
+  server->on("/delete", [this](){
     __handle_delete();
   });
-  server.on("/set", [this](){
+  server->on("/set", [this](){
     __handle_set(false);
   });
-  server.on("/phys", [this](){
+  server->on("/phys", [this](){
     __handle_set(true);
   });
-  server.on("/eeprom", [this](){
+  server->on("/eeprom", [this](){
     __handle_eeprom();
   });
-  server.on("/config", [this](){
+  server->on("/config", [this](){
     __handle_config();
   });
-  server.begin();
+  server->begin();
 
   udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
 }
@@ -682,6 +698,9 @@ address_t ESPKNXIP::get_config_ga(config_id_t id)
 
 void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data)
 {
+  if (receiver.value == 0)
+    return;
+
   uint32_t len = 6 + 2 + 8 + data_len + 1; // knx_pkt + cemi_msg + cemi_service + data + checksum
   DEBUG_PRINT(F("Creating packet with len "));
   DEBUG_PRINTLN(len)
@@ -804,7 +823,7 @@ void ESPKNXIP::loop()
 
 void ESPKNXIP::__loop_webserver()
 {
-  server.handleClient();
+  server->handleClient();
 }
 
 void ESPKNXIP::__loop_knx()
