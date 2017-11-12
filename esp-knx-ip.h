@@ -276,6 +276,24 @@ class ESPKNXIP {
     void send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
     void send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
 
+    void writeBit(address_t const &receiver, uint8_t bit) { sendBit(receiver, KNX_CT_WRITE, bit); }
+    void write1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_WRITE, val); }
+    void write2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_WRITE, val); }
+    void write2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_WRITE, val); }
+    void write3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_WRITE, weekday, hours, minutes, seconds); }
+    void write3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_WRITE, day, month, year); }
+    void write3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_WRITE, red, green, blue); }
+    void write4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_WRITE, val);}
+
+    void answerBit(address_t const &receiver, uint8_t bit) { sendBit(receiver, KNX_CT_ANSWER, bit); }
+    void answer1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_ANSWER, val); }
+    void answer2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_ANSWER, val); }
+    void answer2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_ANSWER, val); }
+    void answer3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_ANSWER, weekday, hours, minutes, seconds); }
+    void answer3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_ANSWER, day, month, year); }
+    void answer3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_ANSWER, red, green, blue); }
+    void answer4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_ANSWER, val);}
+
     static address_t GA_to_address(uint8_t area, uint8_t line, uint8_t member)
     {
       address_t tmp;
