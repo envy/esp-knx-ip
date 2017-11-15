@@ -486,7 +486,6 @@ callback_id_t ESPKNXIP::register_callback(const char *name, GACallback cb)
 
 /**
  * Configuration functions start here
- *
  */
 config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default)
 {
@@ -560,6 +559,10 @@ void ESPKNXIP::config_set_string(config_id_t id, String val)
 {
   if (id >= registered_configs)
     return;
+  if (custom_configs[id].type != CONFIG_TYPE_STRING)
+    return;
+  if (val.length() >= custom_configs[id].len)
+    return;
   __config_set_string(id, val);
 }
 
@@ -571,6 +574,8 @@ void ESPKNXIP::__config_set_string(config_id_t id, String &val)
 void ESPKNXIP::config_set_int(config_id_t id, int32_t val)
 {
   if (id >= registered_configs)
+    return;
+  if (custom_configs[id].type != CONFIG_TYPE_INT)
     return;
   __config_set_int(id, val);
 }
@@ -591,6 +596,8 @@ void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
 void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
 {
   if (id >= registered_configs)
+    return;
+  if (custom_configs[id].type != CONFIG_TYPE_GA)
     return;
   __config_set_ga(id, val);
 }
