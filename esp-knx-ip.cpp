@@ -49,30 +49,6 @@ void ESPKNXIP::__handle_root()
     m += F("</form>");
   }
 
-  if (registered_gas > 0)
-  {
-    m += F("<h4>Status GAs:</h4>");
-    for (uint8_t i = 0; i < registered_gas; ++i)
-    {
-      m += F("<p>");
-      m += F("<form action='/set' method='POST'>");
-      m += F("<input type='hidden' name='id' value='");
-      m += i;
-      m += F("' />");
-      m += ga_names[i];
-      m += F(":&nbsp;");
-      m += F("<input type='number' name='area' min='0' max='31' value='");
-      m += String((gas[i].bytes.high & 0xF8) >> 3);
-      m += F("' />/<input type='number' name='line' min='0' max='7' value='");
-      m += String(gas[i].bytes.high & 0x07);
-      m += F("' />/<input type='number' name='member' min='0' max='255' value='");
-      m += String(gas[i].bytes.low);
-      m += F("' /><input type='submit' value='Set' />");
-      m += F("</form>");
-      m += F("</p>");
-    }
-  }
-
   m += F("<h4>Physical address</h4>");
   m += F("<p>");
   m += F("<form action='/phys' method='POST'>");
@@ -88,7 +64,7 @@ void ESPKNXIP::__handle_root()
 
   if (registered_configs > 0)
   {
-    m += F("<h2>Custom Config</h2>");
+    m += F("<h2>Configuration</h2>");
 
     for (config_id_t i = 0; i < registered_configs; ++i)
     {
@@ -104,16 +80,16 @@ void ESPKNXIP::__handle_root()
       {
         case CONFIG_TYPE_STRING:
           m += F("<input type='text' name='value' value='");
-          m += get_config_string(i);
+          m += config_get_string(i);
           m += F("' />");
           break;
         case CONFIG_TYPE_INT:
           m += F("<input type='number' name='value' value='");
-          m += get_config_int(i);
+          m += config_get_int(i);
           m += F("' />");
           break;
         case CONFIG_TYPE_GA:
-          address_t a = get_config_ga(i);
+          address_t a = config_get_ga(i);
           m += F("<input type='number' name='area' min='0' max='31' value='");
           m += String((a.bytes.high & 0xF8) >> 3);
           m += F("' />/<input type='number' name='line' min='0' max='7' value='");
@@ -197,24 +173,22 @@ end:
   server->sendHeader(F("Location"),F("/"));
   server->send(301);
 }
-void ESPKNXIP::__handle_set(bool phys)
+
+void ESPKNXIP::__handle_set()
 {
   DEBUG_PRINTLN(F("Set called"));
-  if (server->hasArg(F("area")) && server->hasArg(F("line")) && server->hasArg(F("member")) && ((!phys && server->hasArg(F("id"))) || phys))
+  if (server->hasArg(F("area")) && server->hasArg(F("line")) && server->hasArg(F("member")))
   {
     uint8_t area = server->arg(F("area")).toInt();
     uint8_t line = server->arg(F("line")).toInt();
     uint8_t member = server->arg(F("member")).toInt();
-    uint32_t id = server->arg(F("id")).toInt();
 
     DEBUG_PRINT(F("Got args: "));
     DEBUG_PRINT(area);
-    DEBUG_PRINT(F("/"));
+    DEBUG_PRINT(F("."));
     DEBUG_PRINT(line);
-    DEBUG_PRINT(F("/"));
+    DEBUG_PRINT(F("."));
     DEBUG_PRINT(member);
-    DEBUG_PRINT(F("/"));
-    DEBUG_PRINT(id);
     DEBUG_PRINTLN(F(""));
 
     if (area > 31 || line > 7)
@@ -223,22 +197,8 @@ void ESPKNXIP::__handle_set(bool phys)
       goto end;
     }
 
-    if (phys)
-    {
-      physaddr.bytes.high = (area << 4) | line;
-      physaddr.bytes.low = member;
-      goto end;
-    }
-
-    if (id < 0 || id >= registered_gas)
-    {
-      DEBUG_PRINTLN(F("ID wrong"));
-      goto end;
-    }
-    address_t tmp;
-    tmp.bytes.high = (area << 3) | line;
-    tmp.bytes.low = member;
-    gas[id] = tmp;
+    physaddr.bytes.high = (area << 4) | line;
+    physaddr.bytes.low = member;
   }
 end:
   server->sendHeader(F("Location"),F("/"));
@@ -322,10 +282,9 @@ end:
   server->send(301);
 }
 
-ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_gas(0), registered_configs(0)
+ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_configs(0)
 {
   physaddr.value = 0;
-  memset(gas, 0, MAX_GAS * sizeof(address_t));
   memset(custom_config_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
   memset(custom_configs, 0, MAX_CONFIGS * sizeof(config_t));
 }
@@ -363,11 +322,8 @@ void ESPKNXIP::__start()
   server->on("/delete", [this](){
     __handle_delete();
   });
-  server->on("/set", [this](){
-    __handle_set(false);
-  });
   server->on("/phys", [this](){
-    __handle_set(true);
+    __handle_set();
   });
   server->on("/eeprom", [this](){
     __handle_eeprom();
@@ -396,11 +352,6 @@ void ESPKNXIP::save_to_eeprom()
   {
     EEPROM.put(address, ga_callbacks[i]);
     address += sizeof(callback_id_t);
-  }
-  for (uint8_t i = 0; i < MAX_GAS; ++i)
-  {
-    EEPROM.put(address, gas[i]);
-    address += sizeof(address_t);
   }
   EEPROM.put(address, physaddr);
   address += sizeof(address_t);
@@ -443,11 +394,6 @@ void ESPKNXIP::restore_from_eeprom()
     EEPROM.get(address, ga_callbacks[i]);
     address += sizeof(callback_id_t);
   }
-  for (uint8_t i = 0; i < MAX_GAS; ++i)
-  {
-    EEPROM.get(address, gas[i]);
-    address += sizeof(address_t); 
-  }
   EEPROM.get(address, physaddr);
   address += sizeof(address_t); 
 
@@ -456,11 +402,6 @@ void ESPKNXIP::restore_from_eeprom()
 
   DEBUG_PRINT("Restored from EEPROM: 0x");
   DEBUG_PRINTLN(address, HEX);
-}
-
-int ESPKNXIP::first_free_eeprom_address()
-{
-  return sizeof(uint64_t) + sizeof(uint8_t) + (sizeof(address_t) * MAX_GA_CALLBACKS) + (sizeof(callback_id_t) * MAX_GA_CALLBACKS) + (sizeof(address_t) * MAX_GAS) + sizeof(address_t);
 }
 
 uint16_t ESPKNXIP::ntohs(uint16_t n)
@@ -543,32 +484,11 @@ callback_id_t ESPKNXIP::register_callback(const char *name, GACallback cb)
   return register_callback(String(name), cb);
 }
 
-int ESPKNXIP::register_GA(String name)
-{
-  if (registered_gas >= MAX_GAS)
-  {
-    return -1;
-  }
-  int id = registered_gas;
-  ga_names[id] = name;
-  registered_gas++;
-  return id;
-}
-
-address_t ESPKNXIP::get_GA(int id)
-{
-  if (id < 0 || id >= registered_gas)
-  {
-    address_t ret;
-    ret.value = 0;
-    return ret;
-  }
-  return gas[id];
-}
-
-/// Custom config
-
-config_id_t ESPKNXIP::register_config_string(String name, uint8_t len, String _default)
+/**
+ * Configuration functions start here
+ *
+ */
+config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -592,7 +512,7 @@ config_id_t ESPKNXIP::register_config_string(String name, uint8_t len, String _d
   return id;
 }
 
-config_id_t ESPKNXIP::register_config_int(String name, int32_t _default)
+config_id_t ESPKNXIP::config_register_int(String name, int32_t _default)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -613,7 +533,7 @@ config_id_t ESPKNXIP::register_config_int(String name, int32_t _default)
   return id;
 }
 
-config_id_t ESPKNXIP::register_config_ga(String name)
+config_id_t ESPKNXIP::config_register_ga(String name)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -636,14 +556,29 @@ config_id_t ESPKNXIP::register_config_ga(String name)
   return id;
 }
 
-void ESPKNXIP::__config_set_string(config_id_t id, String val)
+void ESPKNXIP::config_set_string(config_id_t id, String val)
+{
+  if (id >= registered_configs)
+    return;
+  __config_set_string(id, val);
+}
+
+void ESPKNXIP::__config_set_string(config_id_t id, String &val)
 {
   memcpy(&custom_config_data[custom_configs[id].offset], val.c_str(), val.length()+1);
+}
+
+void ESPKNXIP::config_set_int(config_id_t id, int32_t val)
+{
+  if (id >= registered_configs)
+    return;
+  __config_set_int(id, val);
 }
 
 void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
 {
   // This does not work for some reason:
+  // Could be due to pointer alignment
   //int32_t *v = (int32_t *)(custom_config_data + custom_configs[id].offset);
   //*v = val;
 
@@ -653,13 +588,20 @@ void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
   custom_config_data[custom_configs[id].offset + 3] = (uint8_t)((val & 0x000000FF) >>  0);
 }
 
+void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
+{
+  if (id >= registered_configs)
+    return;
+  __config_set_ga(id, val);
+}
+
 void ESPKNXIP::__config_set_ga(config_id_t id, address_t const &val)
 {
   custom_config_data[custom_configs[id].offset + 0] = val.bytes.high;
   custom_config_data[custom_configs[id].offset + 1] = val.bytes.low;
 }
 
-String ESPKNXIP::get_config_string(config_id_t id)
+String ESPKNXIP::config_get_string(config_id_t id)
 {
   if (id >= registered_configs)
     return String("");
@@ -667,7 +609,7 @@ String ESPKNXIP::get_config_string(config_id_t id)
   return String((char *)&custom_config_data[custom_configs[id].offset]);
 }
 
-int32_t ESPKNXIP::get_config_int(config_id_t id)
+int32_t ESPKNXIP::config_get_int(config_id_t id)
 {
   if (id >= registered_configs)
     return 0;
@@ -679,7 +621,7 @@ int32_t ESPKNXIP::get_config_int(config_id_t id)
   return v;
 }
 
-address_t ESPKNXIP::get_config_ga(config_id_t id)
+address_t ESPKNXIP::config_get_ga(config_id_t id)
 {
   address_t t;
   if (id >= registered_configs)
@@ -694,7 +636,9 @@ address_t ESPKNXIP::get_config_ga(config_id_t id)
   return t;
 }
 
-/// Send functions
+/**
+ * Send functions start here
+ */
 
 void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data)
 {

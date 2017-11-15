@@ -17,24 +17,25 @@
 
 /**
  * CONFIG
- * All MAX_ values must not exceed 255 and must not be negative!
+ * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
+ * Required EEPROM size is MAX_CONFIG_SPACE + MAX_CONFIGS + MAX_CALLBACKS + MAX_GA_CALLBACKS + 1
  */
-#define MAX_GA_CALLBACKS 10 // Maximum number of group address callbacks that can be stored
-#define MAX_CALLBACKS 10 // Maximum number of callbacks that can be stored
-#define MAX_GAS 10 // Maximum number of configurable GAs that can be stored
-#define MAX_CONFIGS 10
-#define MAX_CONFIG_SPACE 100 // Maximum number of bytes that can be stored for custom config
+#define MAX_GA_CALLBACKS 10 // Maximum number of group address callbacks that can be stored (Default 10)
+#define MAX_CALLBACKS 10 // Maximum number of callbacks that can be stored (Default 10)
+#define MAX_CONFIGS 20 // Maximum number of config items that can be stored (Default 20)
+#define MAX_CONFIG_SPACE 0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+
 
 #define MULTICAST_PORT 3671 // Default KNX/IP port is 3671
 #define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
 // Uncomment to enable printing out debug messages.
-//#define ESP_KNX_DEBUG
+#define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
 
-#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE << 24) + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8) + (MAX_GAS))
+#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE) + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8))
 
 // Define where debug output will be printed.
 #ifndef DEBUG_PRINTER
@@ -250,21 +251,24 @@ class ESPKNXIP {
 
     void save_to_eeprom();
     void restore_from_eeprom();
-    int first_free_eeprom_address();
 
     callback_id_t register_callback(String name, GACallback cb);
     callback_id_t register_callback(const char *name, GACallback cb);
-    int register_GA(String name);
-    address_t get_GA(int id);
 
-    config_id_t register_config_string(String name, uint8_t len, String _default);
-    config_id_t register_config_int(String name, int32_t _default);
-    config_id_t register_config_ga(String name);
+    // Configuration functions
+    config_id_t   config_register_string(String name, uint8_t len, String _default);
+    config_id_t   config_register_int(String name, int32_t _default);
+    config_id_t   config_register_ga(String name);
 
-    String get_config_string(config_id_t id);
-    int32_t get_config_int(config_id_t id);
-    address_t get_config_ga(config_id_t id);
+    String        config_get_string(config_id_t id);
+    int32_t       config_get_int(config_id_t id);
+    address_t     config_get_ga(config_id_t id);
 
+    void          config_set_string(config_id_t id, String val);
+    void          config_set_int(config_id_t id, int32_t val);
+    void          config_set_ga(config_id_t id, address_t val);
+
+    // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
     void sendBit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
@@ -310,11 +314,11 @@ class ESPKNXIP {
     void __handle_root();
     void __handle_register();
     void __handle_delete();
-    void __handle_set(bool phys);
+    void __handle_set();
     void __handle_eeprom();
     void __handle_config();
 
-    void __config_set_string(config_id_t id, String val);
+    void __config_set_string(config_id_t id, String &val);
     void __config_set_int(config_id_t id, int32_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
@@ -329,10 +333,6 @@ class ESPKNXIP {
     callback_id_t registered_callbacks;
     GACallback callbacks[MAX_CALLBACKS];
     String callback_names[MAX_CALLBACKS];
-
-    uint8_t registered_gas;
-    address_t gas[MAX_GAS];
-    String ga_names[MAX_GAS];
 
     config_id_t registered_configs;
     uint8_t custom_config_data[MAX_CONFIG_SPACE];

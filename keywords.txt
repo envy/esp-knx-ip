@@ -8,7 +8,15 @@ knx_command_type_t KEYWORD1
 setup KEYWORD2
 loop KEYWORD2
 register_callback KEYWORD2
-register_GA KEYWORD2
+config_register_string KEYWORD2
+config_register_int KEYWORD2
+config_register_ga KEYWORD2
+config_get_string KEYWORD2
+config_get_int KEYWORD2
+config_get_ga KEYWORD2
+config_set_string KEYWORD2
+config_set_int KEYWORD2
+config_set_ga KEYWORD2
 sendBit KEYWORD2
 send1ByteInt KEYWORD2
 send2ByteInt KEYWORD2

@@ -1,5 +1,6 @@
 /*
  * This is an example showing a simple environment sensor based on a BME280 attached via I2C.
+ * This sketch was tested on a WeMos D1 mini
  */
 
 #include <Adafruit_BME280.h>
@@ -14,7 +15,7 @@ const char* pass = "mypassword";
 
 unsigned long next_change = 0;
 
-int temp_ga, hum_ga, pres_ga;
+config_id_t temp_ga, hum_ga, pres_ga;
 config_id_t hostname_id;
 config_id_t temp_rate_id;
 
@@ -24,14 +25,12 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(115200);
 
-  // Register the three group addresses
-  temp_ga = knx.register_GA("Temperature");
-  hum_ga = knx.register_GA("Humidity");
-  pres_ga = knx.register_GA("Pressure");
-
-  // And the two config options
-  hostname_id = knx.register_config_string("Hostname", 20, String("env"));
-  temp_rate_id = knx.register_config_int("Send rate (ms)", UPDATE_INTERVAL);
+  // Register the group addresses where to send information to and the other config
+  temp_ga = knx.config_register_ga("Temperature");
+  hum_ga = knx.config_register_ga("Humidity");
+  pres_ga = knx.config_register_ga("Pressure");
+  hostname_id = knx.config_register_string("Hostname", 20, String("env"));
+  temp_rate_id = knx.config_register_int("Send rate (ms)", UPDATE_INTERVAL);
 
   // Load previous values from EEPROM
   knx.load();
@@ -42,7 +41,7 @@ void setup() {
   }
 
   // Init WiFi
-  WiFi.hostname(knx.get_config_string(hostname_id));
+  WiFi.hostname(knx.config_get_string(hostname_id));
   WiFi.begin(ssid, pass);
 
   Serial.println("");
@@ -74,7 +73,7 @@ void loop() {
 
   if (next_change < now)
   {
-    next_change = now + knx.get_config_int(temp_rate_id);
+    next_change = now + knx.config_get_int(temp_rate_id);
     Serial.print("T: ");
     float temp = bme.readTemperature();
     float hum = bme.readHumidity();
@@ -85,9 +84,9 @@ void loop() {
     Serial.print("% P: ");
     Serial.print(pres);
     Serial.println("hPa");
-    knx.write2ByteFloat(knx.get_GA(temp_ga), temp);
-    knx.write2ByteFloat(knx.get_GA(hum_ga), hum);
-    knx.write2ByteFloat(knx.get_GA(pres_ga), pres);
+    knx.write2ByteFloat(knx.config_get_ga(temp_ga), temp);
+    knx.write2ByteFloat(knx.config_get_ga(hum_ga), hum);
+    knx.write2ByteFloat(knx.config_get_ga(pres_ga), pres);
   }
 
   delay(50);
