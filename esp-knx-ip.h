@@ -4,7 +4,6 @@
  * License: Not yet decided on one...
  */
 
-
 #ifndef ESP_KNX_IP_H
 #define ESP_KNX_IP_H
 

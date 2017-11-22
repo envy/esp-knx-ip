@@ -1,7 +1,7 @@
 # ESP-KNX-IP #
 
 This is a library for the ESP8266 to enable KNXnet/IP communication. It uses UDP multicast on 224.0.23.12:3671.
-It it intended to be used with the Arduino platform for the ESP8266.
+It is intended to be used with the Arduino platform for the ESP8266.
 
 ## How to use ##
 
@@ -66,9 +66,15 @@ void my_callback(knx_command_type_t ct, address_t const &received_on, uint8_t da
 }
 ```
 
-## How to configure ##
+## How to configure (buildtime) ##
 
-Simply visit the IP of your ESP with a webserver. You can configure the following:
-* KNX physical adress
+Open the `esp-knx-ip.h` and take a look at the config options at the top inside the block marked `CONFIG`
+
+## How to configure (runtime) ##
+
+Simply visit the IP of your ESP with a webbrowser. You can configure the following:
+* KNX physical address
 * Which group address should trigger which callback
 * Which group address are to be used by the program (e.g. for status replies)
+
+The configuration is dynamically generated from the code.
