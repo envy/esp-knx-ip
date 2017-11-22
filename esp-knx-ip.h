@@ -4,8 +4,31 @@
  * License: Not yet decided on one...
  */
 
+
 #ifndef ESP_KNX_IP_H
 #define ESP_KNX_IP_H
+
+/**
+ * CONFIG
+ * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
+ * Config space is restriced by EEPROM_SIZE (default 1024).
+ * Required EEPROM size is MAX_CONFIG_SPACE + MAX_CONFIGS + MAX_CALLBACKS + MAX_GA_CALLBACKS + 1
+ */
+#define EEPROM_SIZE      1024
+#define MAX_GA_CALLBACKS  10 // Maximum number of group address callbacks that can be stored (Default 10)
+#define MAX_CALLBACKS     10 // Maximum number of callbacks that can be stored (Default 10)
+#define MAX_CONFIGS       20 // Maximum number of config items that can be stored (Default 20)
+#define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+
+// There values normally don't need adjustment
+#define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
+#define MULTICAST_IP      IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
+
+// Uncomment to enable printing out debug messages.
+#define ESP_KNX_DEBUG
+/**
+ * END CONFIG
+ */
 
 #include "Arduino.h"
 #include <EEPROM.h>
@@ -14,26 +37,6 @@
 #include <ESP8266WebServer.h>
 
 #include "DPT.h"
-
-/**
- * CONFIG
- * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
- * Required EEPROM size is MAX_CONFIG_SPACE + MAX_CONFIGS + MAX_CALLBACKS + MAX_GA_CALLBACKS + 1
- */
-#define MAX_GA_CALLBACKS 10 // Maximum number of group address callbacks that can be stored (Default 10)
-#define MAX_CALLBACKS 10 // Maximum number of callbacks that can be stored (Default 10)
-#define MAX_CONFIGS 20 // Maximum number of config items that can be stored (Default 20)
-#define MAX_CONFIG_SPACE 0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
-
-
-#define MULTICAST_PORT 3671 // Default KNX/IP port is 3671
-#define MULTICAST_IP IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
-
-// Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
-/**
- * END CONFIG
- */
 
 #define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE) + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8))
 

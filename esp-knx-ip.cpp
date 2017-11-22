@@ -291,7 +291,7 @@ ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), regi
 
 void ESPKNXIP::load()
 {
-  EEPROM.begin(1024);
+  EEPROM.begin(EEPROM_SIZE);
   restore_from_eeprom();
 }
 
