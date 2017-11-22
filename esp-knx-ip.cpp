@@ -8,10 +8,10 @@
 
 void ESPKNXIP::__handle_root()
 {
-  String m = F("<html><body>");
-  m += F("<h2>KNX Config</h2>");
+  String m = F("<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'><link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css' integrity='sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb' crossorigin='anonymous'></head><body><div class='container'>");
+  m += F("<h2>ESP KNX</h2>");
   if (registered_callbacks > 0)
-    m += F("<h4>Callbacks:</h4>");
+    m += F("<h4>Callbacks</h4>");
 
   if (registered_ga_callbacks > 0)
   {
@@ -31,6 +31,7 @@ void ESPKNXIP::__handle_root()
     }
   }
 
+
   if (registered_callbacks > 0)
   {
     m += F("<form action='/register' method='POST'>");
@@ -49,65 +50,78 @@ void ESPKNXIP::__handle_root()
     m += F("</form>");
   }
 
-  m += F("<h4>Physical address</h4>");
-  m += F("<p>");
+  m += F("<h4>Configuration</h4>");
+
+  // Physical address
   m += F("<form action='/phys' method='POST'>");
-  m += F("<input type='number' name='area' min='0' max='15' value='");
+  m += F("<div class='row'><div class='col-sm-6'><div class='input-group'>");
+  m += F("<span class='input-group-addon'>Physical address</span>");
+  m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
-  m += F("' />.<input type='number' name='line' min='0' max='15' value='");
+  m += F("'/>");
+  m += F("<span class='input-group-addon'>.</span>");
+  m += F("<input class='form-control' type='number' name='line' min='0' max='15' value='");
   m += String(physaddr.bytes.high & 0x0F);
-  m += F("' />.<input type='number' name='member' min='0' max='255' value='");
+  m += F("'/>");
+  m += F("<span class='input-group-addon'>.</span>");
+  m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
   m += String(physaddr.bytes.low);
-  m += F("' /><input type='submit' value='Set' />");
+  m += F("'/>");
+  m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+  m += F("</div></div></div>");
   m += F("</form>");
-  m += F("</p>");
 
   if (registered_configs > 0)
   {
-    m += F("<h2>Configuration</h2>");
-
     for (config_id_t i = 0; i < registered_configs; ++i)
     {
-      m += F("<p>");
       m += F("<form action='/config' method='POST'>");
-      m += F("<input type='hidden' name='id' value='");
-      m += i;
-      m += F("' />");
+      m += F("<div class='row'><div class='col-sm-6'><div class='input-group'>");
+      m += F("<span class='input-group-addon'>");
       m += custom_config_names[i];
-      m += F(":&nbsp;");
+      m += F("</span>");
 
       switch (custom_configs[i].type)
       {
         case CONFIG_TYPE_STRING:
-          m += F("<input type='text' name='value' value='");
+          m += F("<input class='form-control' type='text' name='value' value='");
           m += config_get_string(i);
-          m += F("' />");
+          m += F("' maxlength='");
+          m += custom_configs[i].len - 1; // Subtract \0 byte
+          m += F("'/>");
           break;
         case CONFIG_TYPE_INT:
-          m += F("<input type='number' name='value' value='");
+          m += F("<input class='form-control' type='number' name='value' value='");
           m += config_get_int(i);
-          m += F("' />");
+          m += F("'/>");
           break;
         case CONFIG_TYPE_GA:
           address_t a = config_get_ga(i);
-          m += F("<input type='number' name='area' min='0' max='31' value='");
+          m += F("<input class='form-control' type='number' name='area' min='0' max='31' value='");
           m += String((a.bytes.high & 0xF8) >> 3);
-          m += F("' />/<input type='number' name='line' min='0' max='7' value='");
+          m += F("'/>");
+          m += F("<span class='input-group-addon'>/</span>");
+          m += F("<input class='form-control' type='number' name='line' min='0' max='7' value='");
           m += String(a.bytes.high & 0x07);
-          m += F("' />/<input type='number' name='member' min='0' max='255' value='");
+          m += F("'/>");
+          m += F("<span class='input-group-addon'>/</span>");
+          m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
           m += String(a.bytes.low);
-          m += F("' />");
+          m += F("'/>");
           break;
       }
-      m += F("<input type='submit' value='Set' />");
+      m += F("<input type='hidden' name='id' value='");
+      m += i;
+      m += F("'/>");
+      m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+      m += F("</div></div></div>");
       m += F("</form>");
-      m += F("</p>");
     }
   }
 
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='1'><input type='submit' value='Save to EEPROM'></form>");
   m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='2'><input type='submit' value='Restore from EEPROM'></form>");
-  m += F("</body></html>");
+  m += F("</div></body></html>");
   server->send(200, F("text/html"), m);
 }
 
