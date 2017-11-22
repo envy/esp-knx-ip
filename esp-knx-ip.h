@@ -14,11 +14,12 @@
  * Config space is restriced by EEPROM_SIZE (default 1024).
  * Required EEPROM size is MAX_CONFIG_SPACE + MAX_CONFIGS + MAX_CALLBACKS + MAX_GA_CALLBACKS + 1
  */
-#define EEPROM_SIZE      1024
+#define EEPROM_SIZE       1024
 #define MAX_GA_CALLBACKS  10 // Maximum number of group address callbacks that can be stored (Default 10)
 #define MAX_CALLBACKS     10 // Maximum number of callbacks that can be stored (Default 10)
 #define MAX_CONFIGS       20 // Maximum number of config items that can be stored (Default 20)
 #define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+//#define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
 
 // There values normally don't need adjustment
 #define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
