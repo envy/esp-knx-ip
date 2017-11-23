@@ -227,6 +227,7 @@ typedef enum __config_type
 {
   CONFIG_TYPE_UNKNOWN,
   CONFIG_TYPE_INT,
+  CONFIG_TYPE_BOOL,
   CONFIG_TYPE_STRING,
   CONFIG_TYPE_GA,
 
@@ -261,14 +262,17 @@ class ESPKNXIP {
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default);
     config_id_t   config_register_int(String name, int32_t _default);
+    config_id_t   config_register_bool(String name, bool _default);
     config_id_t   config_register_ga(String name);
 
     String        config_get_string(config_id_t id);
     int32_t       config_get_int(config_id_t id);
+    bool          config_get_bool(config_id_t id);
     address_t     config_get_ga(config_id_t id);
 
     void          config_set_string(config_id_t id, String val);
     void          config_set_int(config_id_t id, int32_t val);
+    void          config_set_bool(config_id_t, bool val);
     void          config_set_ga(config_id_t id, address_t val);
 
     // Send functions
@@ -323,6 +327,7 @@ class ESPKNXIP {
 
     void __config_set_string(config_id_t id, String &val);
     void __config_set_int(config_id_t id, int32_t val);
+    void __config_set_bool(config_id_t id, bool val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
     ESP8266WebServer *server;
