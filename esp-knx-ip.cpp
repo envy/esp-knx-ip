@@ -12,7 +12,7 @@ void ESPKNXIP::__handle_root()
 #ifdef USE_BOOTSTRAP
   m += F("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css' integrity='sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb' crossorigin='anonymous'>");
 #endif
-  m += F("</head><body><div class='container'>");
+  m += F("</head><body><div class='container-fluid'>");
   m += F("<h2>ESP KNX</h2>");
   if (registered_callbacks > 0)
     m += F("<h4>Callbacks</h4>");
@@ -21,26 +21,37 @@ void ESPKNXIP::__handle_root()
   {
     for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
     {
-      m += F("<p>");
+      m += F("<form action='/delete' method='POST'>");
+      m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
+      m += F("<span class='input-group-addon'>");
       m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
       m += F("/");
       m += String(ga_callback_addrs[i].bytes.high & 0x07);
       m += F("/");
       m += String(ga_callback_addrs[i].bytes.low);
-      m += F(" : ");
+      m += F("</span>");
+      m += F("<span class='input-group-addon'>");
       m += callback_names[ga_callbacks[i]];
-      m += F("<form action='/delete' method='POST'><input type='hidden' name='id' value='");
+      m += F("</span>");
+      m += F("<input class='form-control' type='hidden' name='id' value='");
       m += i;
-      m += F("'><input type='submit' value='Delete'></form></p>");
+      m += F("' /><span class='input-group-btn'><button type='submit' class='btn btn-danger'>Delete</button></span>");
+      m += F("</div></div></div>");
+      m += F("</form>");
     }
   }
-
 
   if (registered_callbacks > 0)
   {
     m += F("<form action='/register' method='POST'>");
-    m += F("<input type='number' name='area' min='0' max='31'/>/<input type='number' name='line' min='0' max='7'/>/<input type='number' name='member' min='0' max='255'/> -&gt;");
-    m += F("<select name='cb'>");
+    m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
+    m += F("<input class='form-control' type='number' name='area' min='0' max='31'/>");
+    m += F("<span class='input-group-addon'>/</span>");
+    m += F("<input class='form-control' type='number' name='line' min='0' max='7'/>");
+    m += F("<span class='input-group-addon'>/</span>");
+    m += F("<input class='form-control' type='number' name='member' min='0' max='255'/>");
+    m += F("<span class='input-group-addon'>-&gt;</span>");
+    m += F("<select class='form-control' name='cb'>");
     for (uint8_t i = 0; i < registered_callbacks; ++i)
     {
       m += F("<option value=\"");
@@ -50,7 +61,8 @@ void ESPKNXIP::__handle_root()
       m += F("</option>");
     }
     m += F("</select>");
-    m += F("<input type='submit' value='Register' />");
+    m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+    m += F("</div></div></div>");
     m += F("</form>");
   }
 
@@ -58,7 +70,7 @@ void ESPKNXIP::__handle_root()
 
   // Physical address
   m += F("<form action='/phys' method='POST'>");
-  m += F("<div class='row'><div class='col-sm-6'><div class='input-group'>");
+  m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
   m += F("<span class='input-group-addon'>Physical address</span>");
   m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
@@ -80,7 +92,7 @@ void ESPKNXIP::__handle_root()
     for (config_id_t i = 0; i < registered_configs; ++i)
     {
       m += F("<form action='/config' method='POST'>");
-      m += F("<div class='row'><div class='col-sm-6'><div class='input-group'>");
+      m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<span class='input-group-addon'>");
       m += custom_config_names[i];
       m += F("</span>");
@@ -123,8 +135,23 @@ void ESPKNXIP::__handle_root()
     }
   }
 
-  m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='1'><input type='submit' value='Save to EEPROM'></form>");
-  m += F("<form action='/eeprom' method='POST'><input type='hidden' name='mode' value='2'><input type='submit' value='Restore from EEPROM'></form>");
+  // EEPROM save and restore
+  m += F("<div class='row'>");
+  m += F("<div class='col-auto'>");
+  m += F("<form action='/eeprom' method='POST'>");
+  m += F("<input type='hidden' name='mode' value='1'>");
+  m += F("<button type='submit' class='btn btn-success'>Save to EEPROM</button>");
+  m += F("</form>");
+  m += F("</div>");
+  m += F("<div class='col-auto'>");
+  m += F("<form action='/eeprom' method='POST'>");
+  m += F("<input type='hidden' name='mode' value='2'>");
+  m += F("<button type='submit' class='btn btn-info'>Restore from EEPROM</button>");
+  m += F("</form>");
+  m += F("</div>");
+  m += F("</div>"); // row
+
+  // End of page
   m += F("</div></body></html>");
   server->send(200, F("text/html"), m);
 }
