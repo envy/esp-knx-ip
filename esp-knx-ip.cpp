@@ -91,6 +91,10 @@ void ESPKNXIP::__handle_root()
   {
     for (config_id_t i = 0; i < registered_configs; ++i)
     {
+      // Check if this config option has a enable condition and if so check that condition
+      if (custom_configs[i].cond != nullptr && !custom_configs[i].cond())
+        continue;
+
       m += F("<form action='/config' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<span class='input-group-addon'>");
@@ -545,7 +549,7 @@ callback_id_t ESPKNXIP::register_callback(const char *name, GACallback cb)
 /**
  * Configuration functions start here
  */
-config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default)
+config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default, EnableCondition cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -558,6 +562,7 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
 
   custom_configs[id].type = CONFIG_TYPE_STRING;
   custom_configs[id].len = len;
+  custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
   else
@@ -570,7 +575,7 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_int(String name, int32_t _default)
+config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, EnableCondition cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -580,6 +585,7 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default)
 
   custom_configs[id].type = CONFIG_TYPE_INT;
   custom_configs[id].len = sizeof(int32_t);
+  custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
   else
@@ -592,7 +598,7 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default)
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_bool(String name, bool _default)
+config_id_t ESPKNXIP::config_register_bool(String name, bool _default, EnableCondition cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -602,6 +608,7 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default)
 
   custom_configs[id].type = CONFIG_TYPE_BOOL;
   custom_configs[id].len = sizeof(uint8_t);
+  custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
   else
@@ -614,7 +621,7 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default)
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_ga(String name)
+config_id_t ESPKNXIP::config_register_ga(String name, EnableCondition cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -624,6 +631,7 @@ config_id_t ESPKNXIP::config_register_ga(String name)
 
   custom_configs[id].type = CONFIG_TYPE_GA;
   custom_configs[id].len = sizeof(address_t);
+  custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
   else

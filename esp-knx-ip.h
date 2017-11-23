@@ -230,14 +230,16 @@ typedef enum __config_type
   CONFIG_TYPE_BOOL,
   CONFIG_TYPE_STRING,
   CONFIG_TYPE_GA,
-
 } config_type_t;
+
+typedef bool (*EnableCondition)(void);
 
 typedef struct __config
 {
   config_type_t type;
   uint8_t offset;
   uint8_t len;
+  EnableCondition cond;
 } config_t;
 
 typedef uint8_t callback_id_t;
@@ -260,10 +262,10 @@ class ESPKNXIP {
     callback_id_t register_callback(const char *name, GACallback cb);
 
     // Configuration functions
-    config_id_t   config_register_string(String name, uint8_t len, String _default);
-    config_id_t   config_register_int(String name, int32_t _default);
-    config_id_t   config_register_bool(String name, bool _default);
-    config_id_t   config_register_ga(String name);
+    config_id_t   config_register_string(String name, uint8_t len, String _default, EnableCondition cond = nullptr);
+    config_id_t   config_register_int(String name, int32_t _default, EnableCondition cond = nullptr);
+    config_id_t   config_register_bool(String name, bool _default, EnableCondition cond = nullptr);
+    config_id_t   config_register_ga(String name, EnableCondition cond = nullptr);
 
     String        config_get_string(config_id_t id);
     int32_t       config_get_int(config_id_t id);

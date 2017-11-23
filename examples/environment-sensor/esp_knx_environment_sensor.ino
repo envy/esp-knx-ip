@@ -18,6 +18,7 @@ unsigned long next_change = 0;
 config_id_t temp_ga, hum_ga, pres_ga;
 config_id_t hostname_id;
 config_id_t temp_rate_id;
+config_id_t enable_sending_id;
 
 Adafruit_BME280 bme;
 
@@ -26,11 +27,12 @@ void setup() {
   Serial.begin(115200);
 
   // Register the group addresses where to send information to and the other config
-  temp_ga = knx.config_register_ga("Temperature");
-  hum_ga = knx.config_register_ga("Humidity");
-  pres_ga = knx.config_register_ga("Pressure");
   hostname_id = knx.config_register_string("Hostname", 20, String("env"));
-  temp_rate_id = knx.config_register_int("Send rate (ms)", UPDATE_INTERVAL);
+  enable_sending_id = knx.config_register_bool("Enable periodic sending", true);
+  temp_rate_id = knx.config_register_int("Send rate (ms)", UPDATE_INTERVAL, show_periodic_options);
+  temp_ga = knx.config_register_ga("Temperature", show_periodic_options);
+  hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
+  pres_ga = knx.config_register_ga("Pressure", show_periodic_options);
 
   // Load previous values from EEPROM
   knx.load();
@@ -90,4 +92,10 @@ void loop() {
   }
 
   delay(50);
+}
+
+// This is a enable condition function that is checked by the webui to figure out if some config options should be hidden
+bool show_periodic_options()
+{
+  return knx.config_get_bool(enable_sending_id);
 }
