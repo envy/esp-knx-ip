@@ -18,7 +18,7 @@
 #define MAX_CALLBACKS     10 // Maximum number of callbacks that can be stored (Default 10)
 #define MAX_CONFIGS       20 // Maximum number of config items that can be stored (Default 20)
 #define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
-//#define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
+#define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
 
 // There values normally don't need adjustment
 #define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
