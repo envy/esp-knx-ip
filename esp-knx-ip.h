@@ -11,7 +11,7 @@
  * CONFIG
  * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
  * Config space is restriced by EEPROM_SIZE (default 1024).
- * Required EEPROM size is MAX_CONFIG_SPACE + MAX_CONFIGS + MAX_CALLBACKS + MAX_GA_CALLBACKS + 1
+ * Required EEPROM size is 8 + MAX_GA_CALLBACKS * 3 + 2 + MAX_CONFIG_SPACE which is 552 by default
  */
 #define EEPROM_SIZE       1024
 #define MAX_GA_CALLBACKS  10 // Maximum number of group address callbacks that can be stored (Default 10)
