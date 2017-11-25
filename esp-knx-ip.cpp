@@ -304,6 +304,11 @@ void ESPKNXIP::__handle_config()
         uint8_t area = server->arg(F("area")).toInt();
         uint8_t line = server->arg(F("line")).toInt();
         uint8_t member = server->arg(F("member")).toInt();
+        if (area > 31 || line > 7)
+        {
+          DEBUG_PRINTLN(F("Area or Line wrong"));
+          goto end;
+        }
         address_t tmp;
         tmp.bytes.high = (area << 3) | line;
         tmp.bytes.low = member;
