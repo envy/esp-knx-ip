@@ -20,7 +20,7 @@
 #define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
 #define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
 
-// There values normally don't need adjustment
+// These values normally don't need adjustment
 #define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
 #define MULTICAST_IP      IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
