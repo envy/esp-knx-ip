@@ -21,7 +21,7 @@ void ESPKNXIP::__handle_root()
   {
     for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
     {
-      m += F("<form action='/delete' method='POST'>");
+      m += F("<form action='" __DELETE_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<span class='input-group-addon'>");
       m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
@@ -43,7 +43,7 @@ void ESPKNXIP::__handle_root()
 
   if (registered_callbacks > 0)
   {
-    m += F("<form action='/register' method='POST'>");
+    m += F("<form action='" __REGISTER_PATH "' method='POST'>");
     m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
     m += F("<input class='form-control' type='number' name='area' min='0' max='31'/>");
     m += F("<span class='input-group-addon'>/</span>");
@@ -69,7 +69,7 @@ void ESPKNXIP::__handle_root()
   m += F("<h4>Configuration</h4>");
 
   // Physical address
-  m += F("<form action='/phys' method='POST'>");
+  m += F("<form action='" __PHYS_PATH "' method='POST'>");
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
   m += F("<span class='input-group-addon'>Physical address</span>");
   m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
@@ -95,7 +95,7 @@ void ESPKNXIP::__handle_root()
       if (custom_configs[i].cond != nullptr && !custom_configs[i].cond())
         continue;
 
-      m += F("<form action='/config' method='POST'>");
+      m += F("<form action='" __CONFIG_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<span class='input-group-addon'>");
       m += custom_config_names[i];
@@ -150,13 +150,13 @@ void ESPKNXIP::__handle_root()
   // EEPROM save and restore
   m += F("<div class='row'>");
   m += F("<div class='col-auto'>");
-  m += F("<form action='/eeprom' method='POST'>");
+  m += F("<form action='" __EEPROM_PATH "' method='POST'>");
   m += F("<input type='hidden' name='mode' value='1'>");
   m += F("<button type='submit' class='btn btn-success'>Save to EEPROM</button>");
   m += F("</form>");
   m += F("</div>");
   m += F("<div class='col-auto'>");
-  m += F("<form action='/eeprom' method='POST'>");
+  m += F("<form action='" __EEPROM_PATH "' method='POST'>");
   m += F("<input type='hidden' name='mode' value='2'>");
   m += F("<button type='submit' class='btn btn-info'>Restore from EEPROM</button>");
   m += F("</form>");
@@ -203,7 +203,7 @@ void ESPKNXIP::__handle_register()
     knx.register_GA_callback(area, line, member, cb);
   }
 end:
-  server->sendHeader(F("Location"),F("/"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(301);
 }
 
@@ -227,7 +227,7 @@ void ESPKNXIP::__handle_delete()
     knx.delete_GA_callback(id);
   }
 end:
-  server->sendHeader(F("Location"),F("/"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(301);
 }
 
@@ -258,7 +258,7 @@ void ESPKNXIP::__handle_set()
     physaddr.bytes.low = member;
   }
 end:
-  server->sendHeader(F("Location"),F("/"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(301);
 }
 
@@ -313,7 +313,7 @@ void ESPKNXIP::__handle_config()
     }
   }
 end:
-  server->sendHeader(F("Location"),F("/"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(301);
 }
 
@@ -330,7 +330,7 @@ void ESPKNXIP::__handle_eeprom()
 
     if (mode == 1)
     {
-      // save#
+      // save
       save_to_eeprom();
     }
     else if (mode == 2)
@@ -340,7 +340,7 @@ void ESPKNXIP::__handle_eeprom()
     }
   }
 end:
-  server->sendHeader(F("Location"),F("/"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(301);
 }
 
@@ -375,22 +375,25 @@ void ESPKNXIP::start()
 
 void ESPKNXIP::__start()
 {
-  server->on("/", [this](){
+  server->on(ROOT_PREFIX, [this](){
     __handle_root();
   });
-  server->on("/register", [this](){
+  server->on(__ROOT_PATH, [this](){
+    __handle_root();
+  });
+  server->on(__REGISTER_PATH, [this](){
     __handle_register();
   });
-  server->on("/delete", [this](){
+  server->on(__DELETE_PATH, [this](){
     __handle_delete();
   });
-  server->on("/phys", [this](){
+  server->on(__PHYS_PATH, [this](){
     __handle_set();
   });
-  server->on("/eeprom", [this](){
+  server->on(__EEPROM_PATH, [this](){
     __handle_eeprom();
   });
-  server->on("/config", [this](){
+  server->on(__CONFIG_PATH, [this](){
     __handle_config();
   });
   server->begin();

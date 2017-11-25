@@ -18,7 +18,10 @@
 #define MAX_CALLBACKS     10 // Maximum number of callbacks that can be stored (Default 10)
 #define MAX_CONFIGS       20 // Maximum number of config items that can be stored (Default 20)
 #define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+
+// Webserver related
 #define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
+#define ROOT_PREFIX       ""  // This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
@@ -53,6 +56,13 @@
   #define DEBUG_PRINT(...) {}
   #define DEBUG_PRINTLN(...) {}
 #endif
+
+#define __ROOT_PATH       ROOT_PREFIX"/"
+#define __REGISTER_PATH   ROOT_PREFIX"/register"
+#define __DELETE_PATH     ROOT_PREFIX"/delete"
+#define __PHYS_PATH       ROOT_PREFIX"/phys"
+#define __EEPROM_PATH     ROOT_PREFIX"/eeprom"
+#define __CONFIG_PATH     ROOT_PREFIX"/config"
 
 /**
  * Different service types, we are mainly interested in KNX_ST_ROUTING_INDICATION
