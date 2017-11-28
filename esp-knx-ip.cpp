@@ -834,15 +834,15 @@ void ESPKNXIP::send1Bit(address_t const &receiver, knx_command_type_t ct, uint8_
   send(receiver, ct, 1, buf);
 }
 
-void ESPKNXIP::send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+void ESPKNXIP::send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit)
 {
-  uint8_t buf[] = {bit & 0b00000011};
+  uint8_t buf[] = {twobit & 0b00000011};
   send(receiver, ct, 1, buf);
 }
 
-void ESPKNXIP::send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+void ESPKNXIP::send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit)
 {
-  uint8_t buf[] = {bit & 0b00001111};
+  uint8_t buf[] = {fourbit & 0b00001111};
   send(receiver, ct, 1, buf);
 }
 
