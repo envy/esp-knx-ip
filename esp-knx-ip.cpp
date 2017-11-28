@@ -828,9 +828,21 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
   udp.endPacket();
 }
 
-void ESPKNXIP::sendBit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+void ESPKNXIP::send1Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
 {
-  uint8_t buf[] = {bit > 0x00 ? 0x01 : 0x00};
+  uint8_t buf[] = {bit & 0b00000001};
+  send(receiver, ct, 1, buf);
+}
+
+void ESPKNXIP::send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+{
+  uint8_t buf[] = {bit & 0b00000011};
+  send(receiver, ct, 1, buf);
+}
+
+void ESPKNXIP::send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+{
+  uint8_t buf[] = {bit & 0b00001111};
   send(receiver, ct, 1, buf);
 }
 

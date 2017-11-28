@@ -290,7 +290,9 @@ class ESPKNXIP {
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
-    void sendBit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
+    void send1Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
+    void send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit);
+    void send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit);
     void send1ByteInt(address_t const &receiver, knx_command_type_t ct, int8_t val);
     void send2ByteInt(address_t const &receiver, knx_command_type_t ct, int16_t val);
     void send2ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
@@ -299,7 +301,9 @@ class ESPKNXIP {
     void send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
     void send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
 
-    void writeBit(address_t const &receiver, uint8_t bit) { sendBit(receiver, KNX_CT_WRITE, bit); }
+    void write1Bit(address_t const &receiver, uint8_t bit) { send1Bit(receiver, KNX_CT_WRITE, bit); }
+    void write2Bit(address_t const &receiver, uint8_t bit) { send2Bit(receiver, KNX_CT_WRITE, bit); }
+    void write4Bit(address_t const &receiver, uint8_t bit) { send4Bit(receiver, KNX_CT_WRITE, bit); }
     void write1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_WRITE, val); }
     void write2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_WRITE, val); }
     void write2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_WRITE, val); }
@@ -308,7 +312,9 @@ class ESPKNXIP {
     void write3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_WRITE, red, green, blue); }
     void write4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_WRITE, val);}
 
-    void answerBit(address_t const &receiver, uint8_t bit) { sendBit(receiver, KNX_CT_ANSWER, bit); }
+    void answer1Bit(address_t const &receiver, uint8_t bit) { send1Bit(receiver, KNX_CT_ANSWER, bit); }
+    void answer2Bit(address_t const &receiver, uint8_t bit) { send2Bit(receiver, KNX_CT_ANSWER, bit); }
+    void answer4Bit(address_t const &receiver, uint8_t bit) { send4Bit(receiver, KNX_CT_ANSWER, bit); }
     void answer1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_ANSWER, val); }
     void answer2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_ANSWER, val); }
     void answer2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_ANSWER, val); }
