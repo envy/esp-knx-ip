@@ -204,7 +204,7 @@ void ESPKNXIP::__handle_register()
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
-  server->send(301);
+  server->send(302);
 }
 
 void ESPKNXIP::__handle_delete()
@@ -228,7 +228,7 @@ void ESPKNXIP::__handle_delete()
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
-  server->send(301);
+  server->send(302);
 }
 
 void ESPKNXIP::__handle_set()
@@ -259,7 +259,7 @@ void ESPKNXIP::__handle_set()
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
-  server->send(301);
+  server->send(302);
 }
 
 void ESPKNXIP::__handle_config()
@@ -319,7 +319,7 @@ void ESPKNXIP::__handle_config()
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
-  server->send(301);
+  server->send(302);
 }
 
 void ESPKNXIP::__handle_eeprom()
@@ -346,7 +346,7 @@ void ESPKNXIP::__handle_eeprom()
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
-  server->send(301);
+  server->send(302);
 }
 
 ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_configs(0)
