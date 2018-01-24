@@ -10,7 +10,8 @@ void ESPKNXIP::__handle_root()
 {
   String m = F("<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>");
 #ifdef USE_BOOTSTRAP
-  m += F("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css' integrity='sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb' crossorigin='anonymous'>");
+  m += F("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css' integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' crossorigin='anonymous'>");
+  m += F("<style>.input-group-insert > .input-group-text { border-radius: 0; }</style>");
 #endif
   m += F("</head><body><div class='container-fluid'>");
   m += F("<h2>ESP KNX</h2>");
@@ -23,19 +24,19 @@ void ESPKNXIP::__handle_root()
     {
       m += F("<form action='" __DELETE_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
-      m += F("<span class='input-group-addon'>");
+      m += F("<div class='input-group-prepend'><span class='input-group-text'>");
       m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
       m += F("/");
       m += String(ga_callback_addrs[i].bytes.high & 0x07);
       m += F("/");
       m += String(ga_callback_addrs[i].bytes.low);
       m += F("</span>");
-      m += F("<span class='input-group-addon'>");
+      m += F("<span class='input-group-text'>");
       m += callback_names[ga_callbacks[i]];
-      m += F("</span>");
+      m += F("</span></div>");
       m += F("<input class='form-control' type='hidden' name='id' value='");
       m += i;
-      m += F("' /><span class='input-group-btn'><button type='submit' class='btn btn-danger'>Delete</button></span>");
+      m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-danger'>Delete</button></div>");
       m += F("</div></div></div>");
       m += F("</form>");
     }
@@ -46,11 +47,11 @@ void ESPKNXIP::__handle_root()
     m += F("<form action='" __REGISTER_PATH "' method='POST'>");
     m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
     m += F("<input class='form-control' type='number' name='area' min='0' max='31'/>");
-    m += F("<span class='input-group-addon'>/</span>");
+    m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
     m += F("<input class='form-control' type='number' name='line' min='0' max='7'/>");
-    m += F("<span class='input-group-addon'>/</span>");
+    m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
     m += F("<input class='form-control' type='number' name='member' min='0' max='255'/>");
-    m += F("<span class='input-group-addon'>-&gt;</span>");
+    m += F("<div class='input-group-insert'><span class='input-group-text'>-&gt;</span></div>");
     m += F("<select class='form-control' name='cb'>");
     for (uint8_t i = 0; i < registered_callbacks; ++i)
     {
@@ -61,7 +62,7 @@ void ESPKNXIP::__handle_root()
       m += F("</option>");
     }
     m += F("</select>");
-    m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+    m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
     m += F("</div></div></div>");
     m += F("</form>");
   }
@@ -71,19 +72,19 @@ void ESPKNXIP::__handle_root()
   // Physical address
   m += F("<form action='" __PHYS_PATH "' method='POST'>");
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
-  m += F("<span class='input-group-addon'>Physical address</span>");
+  m += F("<div class='input-group-prepend'><span class='input-group-text'>Physical address</span></div>");
   m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
   m += F("'/>");
-  m += F("<span class='input-group-addon'>.</span>");
+  m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
   m += F("<input class='form-control' type='number' name='line' min='0' max='15' value='");
   m += String(physaddr.bytes.high & 0x0F);
   m += F("'/>");
-  m += F("<span class='input-group-addon'>.</span>");
+  m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
   m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
   m += String(physaddr.bytes.low);
   m += F("'/>");
-  m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+  m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
   m += F("</div></div></div>");
   m += F("</form>");
 
@@ -97,9 +98,9 @@ void ESPKNXIP::__handle_root()
 
       m += F("<form action='" __CONFIG_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
-      m += F("<span class='input-group-addon'>");
+      m += F("<div class='input-group-prepend'><span class='input-group-text'>");
       m += custom_config_names[i];
-      m += F("</span>");
+      m += F("</span></div>");
 
       switch (custom_configs[i].type)
       {
@@ -116,23 +117,23 @@ void ESPKNXIP::__handle_root()
           m += F("'/>");
           break;
         case CONFIG_TYPE_BOOL:
-          m += F("<span class='input-group-addon'>");
+          m += F("<div class='input-group-insert'><span class='input-group-text'>");
           m += F("<input type='checkbox' name='value' ");
           if (config_get_bool(i))
             m += F("checked ");
           m += F("/>");
-          m += F("</span>");
+          m += F("</span></div>");
           break;
         case CONFIG_TYPE_GA:
           address_t a = config_get_ga(i);
           m += F("<input class='form-control' type='number' name='area' min='0' max='31' value='");
           m += String((a.bytes.high & 0xF8) >> 3);
           m += F("'/>");
-          m += F("<span class='input-group-addon'>/</span>");
+          m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
           m += F("<input class='form-control' type='number' name='line' min='0' max='7' value='");
           m += String(a.bytes.high & 0x07);
           m += F("'/>");
-          m += F("<span class='input-group-addon'>/</span>");
+          m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
           m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
           m += String(a.bytes.low);
           m += F("'/>");
@@ -141,7 +142,7 @@ void ESPKNXIP::__handle_root()
       m += F("<input type='hidden' name='id' value='");
       m += i;
       m += F("'/>");
-      m += F("<span class='input-group-btn'><button type='submit' class='btn btn-primary'>Set</button></span>");
+      m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
       m += F("</div></div></div>");
       m += F("</form>");
     }
