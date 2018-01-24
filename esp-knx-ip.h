@@ -63,6 +63,7 @@
 #define __PHYS_PATH       ROOT_PREFIX"/phys"
 #define __EEPROM_PATH     ROOT_PREFIX"/eeprom"
 #define __CONFIG_PATH     ROOT_PREFIX"/config"
+#define __RESTORE_PATH    ROOT_PREFIX"/restore"
 
 /**
  * Different service types, we are mainly interested in KNX_ST_ROUTING_INDICATION
@@ -348,6 +349,7 @@ class ESPKNXIP {
     void __handle_set();
     void __handle_eeprom();
     void __handle_config();
+    void __handle_restore();
 
     void __config_set_flags(config_id_t id, config_flags_t flags);
 

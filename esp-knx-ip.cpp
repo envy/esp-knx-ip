@@ -149,16 +149,24 @@ void ESPKNXIP::__handle_root()
 
   // EEPROM save and restore
   m += F("<div class='row'>");
+  // Save to EEPROM
   m += F("<div class='col-auto'>");
   m += F("<form action='" __EEPROM_PATH "' method='POST'>");
   m += F("<input type='hidden' name='mode' value='1'>");
   m += F("<button type='submit' class='btn btn-success'>Save to EEPROM</button>");
   m += F("</form>");
   m += F("</div>");
+  // Restore from EEPROM
   m += F("<div class='col-auto'>");
   m += F("<form action='" __EEPROM_PATH "' method='POST'>");
   m += F("<input type='hidden' name='mode' value='2'>");
   m += F("<button type='submit' class='btn btn-info'>Restore from EEPROM</button>");
+  m += F("</form>");
+  m += F("</div>");
+  // Load Defaults
+  m += F("<div class='col-auto'>");
+  m += F("<form action='" __RESTORE_PATH "' method='POST'>");
+  m += F("<button type='submit' class='btn btn-info'>Restore defaults</button>");
   m += F("</form>");
   m += F("</div>");
   m += F("</div>"); // row
@@ -326,6 +334,15 @@ end:
   server->send(302);
 }
 
+void ESPKNXIP::__handle_restore()
+{
+  DEBUG_PRINTLN(F("Restore called"));
+  memcpy(custom_config_data, custom_config_default_data, MAX_CONFIG_SPACE);
+end:
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
+  server->send(302);
+}
+
 void ESPKNXIP::__handle_eeprom()
 {
   DEBUG_PRINTLN(F("EEPROM called"));
@@ -408,6 +425,9 @@ void ESPKNXIP::__start()
   });
   server->on(__CONFIG_PATH, [this](){
     __handle_config();
+  });
+  server->on(__RESTORE_PATH, [this](){
+    __handle_restore();
   });
   server->begin();
 
