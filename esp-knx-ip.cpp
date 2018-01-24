@@ -286,16 +286,19 @@ void ESPKNXIP::__handle_config()
         String v = server->arg(F("value"));
         if (v.length() >= custom_configs[id].len)
           goto end;
+        __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
         __config_set_string(id, v);
         break;
       }
       case CONFIG_TYPE_INT:
       {
+        __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
         __config_set_int(id, server->arg(F("value")).toInt());
         break;
       }
       case CONFIG_TYPE_BOOL:
       {
+        __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
         __config_set_bool(id, server->arg(F("value")).compareTo(F("on")) == 0);
         break;
       }
@@ -312,6 +315,7 @@ void ESPKNXIP::__handle_config()
         address_t tmp;
         tmp.bytes.high = (area << 3) | line;
         tmp.bytes.low = member;
+        __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
         __config_set_ga(id, tmp);
         break;
       }
@@ -351,13 +355,17 @@ end:
 
 ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_configs(0)
 {
+  DEBUG_PRINTLN();
+  DEBUG_PRINTLN("ESPKNXIP starting up");
   physaddr.value = 0;
   memset(custom_config_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
+  memset(custom_config_default_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
   memset(custom_configs, 0, MAX_CONFIGS * sizeof(config_t));
 }
 
 void ESPKNXIP::load()
 {
+  memcpy(custom_config_default_data, custom_config_data, MAX_CONFIG_SPACE);
   EEPROM.begin(EEPROM_SIZE);
   restore_from_eeprom();
 }
@@ -467,8 +475,27 @@ void ESPKNXIP::restore_from_eeprom()
   EEPROM.get(address, physaddr);
   address += sizeof(address_t); 
 
-  EEPROM.get(address, custom_config_data);
-  address += sizeof(custom_config_data);
+  //EEPROM.get(address, custom_config_data);
+  //address += sizeof(custom_config_data);
+
+  for (uint8_t i = 0; i < registered_configs; ++i)
+  {
+    // First byte is flags.
+    config_flags_t flags = CONFIG_FLAGS_NO_FLAGS;
+    flags = (config_flags_t)EEPROM.read(address);
+    DEBUG_PRINT("Flag in EEPROM: ");
+    DEBUG_PRINTLN(flags, BIN);
+    if (flags & CONFIG_FLAGS_VALUE_SET)
+    {
+      DEBUG_PRINTLN("Non-default value");
+      for (int j = 0; j < custom_configs[i].len - sizeof(uint8_t); ++j)
+      {
+        custom_config_data[custom_configs[i].offset + sizeof(uint8_t) + j] = EEPROM.read(address + sizeof(uint8_t) + j);
+      }
+    }
+
+    address += custom_configs[i].len;
+  }
 
   DEBUG_PRINT("Restored from EEPROM: 0x");
   DEBUG_PRINTLN(address, HEX);
@@ -569,7 +596,7 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
   custom_config_names[id] = name;
 
   custom_configs[id].type = CONFIG_TYPE_STRING;
-  custom_configs[id].len = len;
+  custom_configs[id].len = sizeof(uint8_t) + len;
   custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
@@ -592,7 +619,7 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, EnableC
   custom_config_names[id] = name;
 
   custom_configs[id].type = CONFIG_TYPE_INT;
-  custom_configs[id].len = sizeof(int32_t);
+  custom_configs[id].len = sizeof(uint8_t) + sizeof(int32_t);
   custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
@@ -615,7 +642,7 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default, EnableCon
   custom_config_names[id] = name;
 
   custom_configs[id].type = CONFIG_TYPE_BOOL;
-  custom_configs[id].len = sizeof(uint8_t);
+  custom_configs[id].len = sizeof(uint8_t) + sizeof(uint8_t);
   custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
@@ -638,7 +665,7 @@ config_id_t ESPKNXIP::config_register_ga(String name, EnableCondition cond)
   custom_config_names[id] = name;
 
   custom_configs[id].type = CONFIG_TYPE_GA;
-  custom_configs[id].len = sizeof(address_t);
+  custom_configs[id].len = sizeof(uint8_t) + sizeof(address_t);
   custom_configs[id].cond = cond;
   if (id == 0)
     custom_configs[id].offset = 0;
@@ -654,6 +681,11 @@ config_id_t ESPKNXIP::config_register_ga(String name, EnableCondition cond)
   return id;
 }
 
+void ESPKNXIP::__config_set_flags(config_id_t id, config_flags_t flags)
+{
+  custom_config_data[custom_configs[id].offset] |= flags;
+}
+
 void ESPKNXIP::config_set_string(config_id_t id, String val)
 {
   if (id >= registered_configs)
@@ -662,12 +694,13 @@ void ESPKNXIP::config_set_string(config_id_t id, String val)
     return;
   if (val.length() >= custom_configs[id].len)
     return;
+  __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
   __config_set_string(id, val);
 }
 
 void ESPKNXIP::__config_set_string(config_id_t id, String &val)
 {
-  memcpy(&custom_config_data[custom_configs[id].offset], val.c_str(), val.length()+1);
+  memcpy(&custom_config_data[custom_configs[id].offset + sizeof(uint8_t)], val.c_str(), val.length()+1);
 }
 
 void ESPKNXIP::config_set_int(config_id_t id, int32_t val)
@@ -676,6 +709,7 @@ void ESPKNXIP::config_set_int(config_id_t id, int32_t val)
     return;
   if (custom_configs[id].type != CONFIG_TYPE_INT)
     return;
+  __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
   __config_set_int(id, val);
 }
 
@@ -685,11 +719,10 @@ void ESPKNXIP::__config_set_int(config_id_t id, int32_t val)
   // Could be due to pointer alignment
   //int32_t *v = (int32_t *)(custom_config_data + custom_configs[id].offset);
   //*v = val;
-
-  custom_config_data[custom_configs[id].offset + 0] = (uint8_t)((val & 0xFF000000) >> 24);
-  custom_config_data[custom_configs[id].offset + 1] = (uint8_t)((val & 0x00FF0000) >> 16);
-  custom_config_data[custom_configs[id].offset + 2] = (uint8_t)((val & 0x0000FF00) >>  8);
-  custom_config_data[custom_configs[id].offset + 3] = (uint8_t)((val & 0x000000FF) >>  0);
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 0] = (uint8_t)((val & 0xFF000000) >> 24);
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 1] = (uint8_t)((val & 0x00FF0000) >> 16);
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 2] = (uint8_t)((val & 0x0000FF00) >>  8);
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 3] = (uint8_t)((val & 0x000000FF) >>  0);
 }
 
 void ESPKNXIP::config_set_bool(config_id_t id, bool val)
@@ -698,12 +731,13 @@ void ESPKNXIP::config_set_bool(config_id_t id, bool val)
     return;
   if (custom_configs[id].type != CONFIG_TYPE_BOOL)
     return;
+  __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
   __config_set_bool(id, val);
 }
 
 void ESPKNXIP::__config_set_bool(config_id_t id, bool val)
 {
-  custom_config_data[custom_configs[id].offset] = val ? 1 : 0;
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] = val ? 1 : 0;
 }
 
 void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
@@ -712,13 +746,14 @@ void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
     return;
   if (custom_configs[id].type != CONFIG_TYPE_GA)
     return;
+  __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
   __config_set_ga(id, val);
 }
 
 void ESPKNXIP::__config_set_ga(config_id_t id, address_t const &val)
 {
-  custom_config_data[custom_configs[id].offset + 0] = val.bytes.high;
-  custom_config_data[custom_configs[id].offset + 1] = val.bytes.low;
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 0] = val.bytes.high;
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 1] = val.bytes.low;
 }
 
 String ESPKNXIP::config_get_string(config_id_t id)
@@ -726,7 +761,7 @@ String ESPKNXIP::config_get_string(config_id_t id)
   if (id >= registered_configs)
     return String("");
 
-  return String((char *)&custom_config_data[custom_configs[id].offset]);
+  return String((char *)&custom_config_data[custom_configs[id].offset + sizeof(uint8_t)]);
 }
 
 int32_t ESPKNXIP::config_get_int(config_id_t id)
@@ -734,10 +769,10 @@ int32_t ESPKNXIP::config_get_int(config_id_t id)
   if (id >= registered_configs)
     return 0;
 
-  int32_t v = (custom_config_data[custom_configs[id].offset + 0] << 24) +
-              (custom_config_data[custom_configs[id].offset + 1] << 16) +
-              (custom_config_data[custom_configs[id].offset + 2] <<  8) +
-              (custom_config_data[custom_configs[id].offset + 3] <<  0);
+  int32_t v = (custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 0] << 24) +
+              (custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 1] << 16) +
+              (custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 2] <<  8) +
+              (custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 3] <<  0);
   return v;
 }
 
@@ -746,7 +781,7 @@ bool ESPKNXIP::config_get_bool(config_id_t id)
   if (id >= registered_configs)
     return false;
 
-  return custom_config_data[custom_configs[id].offset] != 0;
+  return custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] != 0;
 }
 
 address_t ESPKNXIP::config_get_ga(config_id_t id)
@@ -758,8 +793,8 @@ address_t ESPKNXIP::config_get_ga(config_id_t id)
     return t;
   }
 
-  t.bytes.high = custom_config_data[custom_configs[id].offset + 0];
-  t.bytes.low = custom_config_data[custom_configs[id].offset + 1];
+  t.bytes.high = custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 0];
+  t.bytes.low = custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 1];
 
   return t;
 }

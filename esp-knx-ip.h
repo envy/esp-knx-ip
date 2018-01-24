@@ -242,6 +242,12 @@ typedef enum __config_type
   CONFIG_TYPE_GA,
 } config_type_t;
 
+typedef enum __config_flags
+{
+  CONFIG_FLAGS_NO_FLAGS = 0,
+  CONFIG_FLAGS_VALUE_SET = 1,
+} config_flags_t;
+
 typedef bool (*EnableCondition)(void);
 
 typedef struct __config
@@ -343,6 +349,8 @@ class ESPKNXIP {
     void __handle_eeprom();
     void __handle_config();
 
+    void __config_set_flags(config_id_t id, config_flags_t flags);
+
     void __config_set_string(config_id_t id, String &val);
     void __config_set_int(config_id_t id, int32_t val);
     void __config_set_bool(config_id_t id, bool val);
@@ -362,6 +370,7 @@ class ESPKNXIP {
 
     config_id_t registered_configs;
     uint8_t custom_config_data[MAX_CONFIG_SPACE];
+    uint8_t custom_config_default_data[MAX_CONFIG_SPACE];
     String custom_config_names[MAX_CONFIGS];
     config_t custom_configs[MAX_CONFIGS];
 
