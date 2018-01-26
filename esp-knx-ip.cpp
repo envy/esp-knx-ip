@@ -956,6 +956,16 @@ void ESPKNXIP::send3ByteTime(address_t const &receiver, knx_command_type_t ct, u
   send(receiver, ct, 4, buf);
 }
 
+time_of_day_t ESPKNXIP::data_to_3byte_time(uint8_t *data)
+{
+  time_of_day_t time;
+  time.weekday = (weekday_t)((data[1] & 0b11100000) >> 5);
+  time.hours = (data[1] & 0b00011111);
+  time.minutes = (data[2] & 0b00111111);
+  time.seconds = (data[3] & 0b00111111);
+  return time;
+}
+
 void ESPKNXIP::send3ByteDate(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
 {
   uint8_t buf[] = {0x00, day & 0x1F, month & 0x0F, year};

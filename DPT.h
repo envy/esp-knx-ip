@@ -37,3 +37,29 @@ typedef enum __dpt_3_007
 	DPT_3_007_INCREASE_3    = 0x0E,
 	DPT_3_007_INCREASE_1    = 0x0F,
 } dpt_3_007_t;
+
+typedef enum __weekday
+{
+	DPT_10_001_WEEKDAY_MONDAY = 1,
+	DPT_10_001_WEEKDAY_TUESDAY = 2,
+	DPT_10_001_WEEKDAY_WEDNESDAY = 3,
+	DPT_10_001_WEEKDAY_THURSDAY = 4,
+	DPT_10_001_WEEKDAY_FRIDAY = 5,
+	DPT_10_001_WEEKDAY_SATURDAY = 6,
+	DPT_10_001_WEEKDAY_SUNDAY = 8,
+} weekday_t;
+
+typedef struct __time
+{
+  weekday_t weekday;
+  uint8_t hours;
+  uint8_t minutes;
+  uint8_t seconds;
+} time_of_day_t;
+
+typedef struct __color
+{
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+} color_t;
