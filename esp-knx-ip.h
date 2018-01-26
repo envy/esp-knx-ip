@@ -13,19 +13,19 @@
  * Config space is restriced by EEPROM_SIZE (default 1024).
  * Required EEPROM size is 8 + MAX_GA_CALLBACKS * 3 + 2 + MAX_CONFIG_SPACE which is 552 by default
  */
-#define EEPROM_SIZE       1024
-#define MAX_GA_CALLBACKS  10 // Maximum number of group address callbacks that can be stored (Default 10)
-#define MAX_CALLBACKS     10 // Maximum number of callbacks that can be stored (Default 10)
-#define MAX_CONFIGS       20 // Maximum number of config items that can be stored (Default 20)
-#define MAX_CONFIG_SPACE  0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+#define EEPROM_SIZE               1024
+#define MAX_CALLBACK_ASSIGNMENTS  10 // Maximum number of group address callbacks that can be stored (Default 10)
+#define MAX_CALLBACKS             10 // Maximum number of callbacks that can be stored (Default 10)
+#define MAX_CONFIGS               20 // Maximum number of config items that can be stored (Default 20)
+#define MAX_CONFIG_SPACE          0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
 
 // Webserver related
-#define USE_BOOTSTRAP     // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
-#define ROOT_PREFIX       ""  // This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#define USE_BOOTSTRAP             // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
+#define ROOT_PREFIX               ""  // This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
 
 // These values normally don't need adjustment
-#define MULTICAST_PORT    3671 // Default KNX/IP port is 3671
-#define MULTICAST_IP      IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
+#define MULTICAST_PORT            3671 // Default KNX/IP port is 3671
+#define MULTICAST_IP              IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
 
 // Uncomment to enable printing out debug messages.
 #define ESP_KNX_DEBUG
@@ -41,7 +41,7 @@
 
 #include "DPT.h"
 
-#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE) + (MAX_GA_CALLBACKS << 16) + (MAX_CALLBACKS << 8))
+#define EEPROM_MAGIC (0xDEADBEEF00000000 + (MAX_CONFIG_SPACE) + (MAX_CALLBACK_ASSIGNMENTS << 16) + (MAX_CALLBACKS << 8))
 
 // Define where debug output will be printed.
 #ifndef DEBUG_PRINTER
@@ -249,20 +249,19 @@ typedef enum __config_flags
   CONFIG_FLAGS_VALUE_SET = 1,
 } config_flags_t;
 
-typedef bool (*EnableCondition)(void);
+typedef bool (*enable_condition_t)(void);
 typedef void (*callback_fptr_t)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
 
 typedef uint8_t callback_id_t;
 typedef uint8_t callback_assignment_id_t;
 typedef uint8_t config_id_t;
 
-
 typedef struct __config
 {
   config_type_t type;
   uint8_t offset;
   uint8_t len;
-  EnableCondition cond;
+  enable_condition_t cond;
 } config_t;
 
 typedef struct __callback
@@ -270,6 +269,12 @@ typedef struct __callback
   callback_fptr_t fkt;
   String name;
 } callback_t;
+
+typedef struct __callback_assignment
+{
+  address_t address;
+  callback_id_t callback_id;
+} callback_assignment_t;
 
 class ESPKNXIP {
   public:
@@ -286,10 +291,10 @@ class ESPKNXIP {
     callback_id_t register_callback(const char *name, callback_fptr_t cb);
 
     // Configuration functions
-    config_id_t   config_register_string(String name, uint8_t len, String _default, EnableCondition cond = nullptr);
-    config_id_t   config_register_int(String name, int32_t _default, EnableCondition cond = nullptr);
-    config_id_t   config_register_bool(String name, bool _default, EnableCondition cond = nullptr);
-    config_id_t   config_register_ga(String name, EnableCondition cond = nullptr);
+    config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
+    config_id_t   config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
+    config_id_t   config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
+    config_id_t   config_register_ga(String name, enable_condition_t cond = nullptr);
 
     String        config_get_string(config_id_t id);
     int32_t       config_get_int(config_id_t id);
@@ -372,9 +377,8 @@ class ESPKNXIP {
     address_t physaddr;
     WiFiUDP udp;
 
-    callback_assignment_id_t registered_ga_callbacks;
-    address_t ga_callback_addrs[MAX_GA_CALLBACKS];
-    callback_id_t ga_callbacks[MAX_GA_CALLBACKS];
+    callback_assignment_id_t registered_callback_assignments;
+    callback_assignment_t callback_assignments[MAX_CALLBACK_ASSIGNMENTS];
 
     callback_id_t registered_callbacks;
     callback_t callbacks[MAX_CALLBACKS];

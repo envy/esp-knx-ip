@@ -18,21 +18,21 @@ void ESPKNXIP::__handle_root()
   if (registered_callbacks > 0)
     m += F("<h4>Callbacks</h4>");
 
-  if (registered_ga_callbacks > 0)
+  if (registered_callback_assignments > 0)
   {
-    for (uint8_t i = 0; i < registered_ga_callbacks; ++i)
+    for (uint8_t i = 0; i < registered_callback_assignments; ++i)
     {
       m += F("<form action='" __DELETE_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<div class='input-group-prepend'><span class='input-group-text'>");
-      m += String((ga_callback_addrs[i].bytes.high & 0xF8) >> 3);
+      m += String((callback_assignments[i].address.bytes.high & 0xF8) >> 3);
       m += F("/");
-      m += String(ga_callback_addrs[i].bytes.high & 0x07);
+      m += String(callback_assignments[i].address.bytes.high & 0x07);
       m += F("/");
-      m += String(ga_callback_addrs[i].bytes.low);
+      m += String(callback_assignments[i].address.bytes.low);
       m += F("</span>");
       m += F("<span class='input-group-text'>");
-      m += callbacks[ga_callbacks[i]].name;
+      m += callbacks[callback_assignments[i].callback_id].name;
       m += F("</span></div>");
       m += F("<input class='form-control' type='hidden' name='id' value='");
       m += i;
@@ -227,7 +227,7 @@ void ESPKNXIP::__handle_delete()
     DEBUG_PRINT(id);
     DEBUG_PRINTLN(F(""));
 
-    if (id >= registered_ga_callbacks)
+    if (id >= registered_callback_assignments)
     {
       DEBUG_PRINTLN(F("ID wrong"));
       goto end;
@@ -371,11 +371,12 @@ end:
   server->send(302);
 }
 
-ESPKNXIP::ESPKNXIP() : registered_ga_callbacks(0), registered_callbacks(0), registered_configs(0)
+ESPKNXIP::ESPKNXIP() : registered_callback_assignments(0), registered_callbacks(0), registered_configs(0)
 {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("ESPKNXIP starting up");
   physaddr.value = 0;
+  memset(callback_assignments, 0, MAX_CALLBACK_ASSIGNMENTS * sizeof(callback_assignment_t));
   memset(callbacks, 0, MAX_CALLBACKS * sizeof(callback_fptr_t));
   memset(custom_config_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
   memset(custom_config_default_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
@@ -442,15 +443,15 @@ void ESPKNXIP::save_to_eeprom()
   uint64_t magic = EEPROM_MAGIC;
   EEPROM.put(address, magic);
   address += sizeof(uint64_t);
-  EEPROM.put(address++, registered_ga_callbacks);
-  for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
+  EEPROM.put(address++, registered_callback_assignments);
+  for (uint8_t i = 0; i < MAX_CALLBACK_ASSIGNMENTS; ++i)
   {
-    EEPROM.put(address, ga_callback_addrs[i]);
+    EEPROM.put(address, callback_assignments[i].address);
     address += sizeof(address_t);
   }
-  for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
+  for (uint8_t i = 0; i < MAX_CALLBACK_ASSIGNMENTS; ++i)
   {
-    EEPROM.put(address, ga_callbacks[i]);
+    EEPROM.put(address, callback_assignments[i].callback_id);
     address += sizeof(callback_id_t);
   }
   EEPROM.put(address, physaddr);
@@ -483,15 +484,15 @@ void ESPKNXIP::restore_from_eeprom()
     return;
   }
   address += sizeof(uint64_t);
-  EEPROM.get(address++, registered_ga_callbacks);
-  for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
+  EEPROM.get(address++, registered_callback_assignments);
+  for (uint8_t i = 0; i < MAX_CALLBACK_ASSIGNMENTS; ++i)
   {
-    EEPROM.get(address, ga_callback_addrs[i]);
+    EEPROM.get(address, callback_assignments[i].address);
     address += sizeof(address_t);
   }
-  for (uint8_t i = 0; i < MAX_GA_CALLBACKS; ++i)
+  for (uint8_t i = 0; i < MAX_CALLBACK_ASSIGNMENTS; ++i)
   {
-    EEPROM.get(address, ga_callbacks[i]);
+    EEPROM.get(address, callback_assignments[i].callback_id);
     address += sizeof(callback_id_t);
   }
   EEPROM.get(address, physaddr);
@@ -530,21 +531,21 @@ uint16_t ESPKNXIP::ntohs(uint16_t n)
 
 callback_assignment_id_t ESPKNXIP::__callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb)
 {
-  if (registered_ga_callbacks >= MAX_GA_CALLBACKS)
+  if (registered_callback_assignments >= MAX_CALLBACK_ASSIGNMENTS)
     return -1;
 
-  int id = registered_ga_callbacks;
+  callback_assignment_id_t id = registered_callback_assignments;
 
-  ga_callback_addrs[id].bytes.high = (area << 3) | line;
-  ga_callback_addrs[id].bytes.low = member;
-  ga_callbacks[id] = cb;
-  registered_ga_callbacks++;
+  callback_assignments[id].address.bytes.high = (area << 3) | line;
+  callback_assignments[id].address.bytes.low = member;
+  callback_assignments[id].callback_id = cb;
+  registered_callback_assignments++;
   return id;
 }
 
 void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
 {
-  if (id < 0 || id >= registered_ga_callbacks)
+  if (id >= registered_callback_assignments)
     return;
 
   uint32_t dest_offset = 0;
@@ -557,9 +558,9 @@ void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
     // registered_ga_callbacks will be 1 in case of only one entry
     // registered_ga_callbacks will be 2 in case of two entries, etc..
     // so only copy anything, if there is it at least more then one element
-    len = (registered_ga_callbacks - 1);
+    len = (registered_callback_assignments - 1);
   }
-  else if (id == registered_ga_callbacks - 1)
+  else if (id == registered_callback_assignments - 1)
   {
     // last element, don't do anything, simply decrement counter
   }
@@ -571,16 +572,15 @@ void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
     // skip all prev elements
     dest_offset = id; // id is equal to how many element are in front of it
     src_offset = dest_offset + 1; // start after the current element
-    len = (registered_ga_callbacks - 1 - id);
+    len = (registered_callback_assignments - 1 - id);
   }
 
   if (len > 0)
   {
-    memmove(ga_callback_addrs + dest_offset, ga_callback_addrs + src_offset, len * sizeof(address_t));
-    memmove(ga_callbacks + dest_offset, ga_callbacks + src_offset, len * sizeof(callback_id_t));
+    memmove(callback_assignments + dest_offset, callback_assignments + src_offset, len * sizeof(callback_assignment_t));
   }
 
-  registered_ga_callbacks--;
+  registered_callback_assignments--;
 }
 
 callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb)
@@ -604,7 +604,7 @@ callback_id_t ESPKNXIP::register_callback(const char *name, callback_fptr_t cb)
 /**
  * Configuration functions start here
  */
-config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default, EnableCondition cond)
+config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default, enable_condition_t cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -630,7 +630,7 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, EnableCondition cond)
+config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, enable_condition_t cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -653,7 +653,7 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, EnableC
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_bool(String name, bool _default, EnableCondition cond)
+config_id_t ESPKNXIP::config_register_bool(String name, bool _default, enable_condition_t cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -676,7 +676,7 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default, EnableCon
   return id;
 }
 
-config_id_t ESPKNXIP::config_register_ga(String name, EnableCondition cond)
+config_id_t ESPKNXIP::config_register_ga(String name, enable_condition_t cond)
 {
   if (registered_configs >= MAX_CONFIGS)
     return -1;
@@ -1052,19 +1052,19 @@ void ESPKNXIP::__loop_knx()
   DEBUG_PRINTLN(F("=="));
 
   // Call callbacks
-  for (int i = 0; i < registered_ga_callbacks; ++i)
+  for (int i = 0; i < registered_callback_assignments; ++i)
   {
     DEBUG_PRINT(F("Testing: 0x"));
-    DEBUG_PRINT(ga_callback_addrs[i].bytes.high, 16);
+    DEBUG_PRINT(callback_assignments[i].address.bytes.high, 16);
     DEBUG_PRINT(F(" 0x"));
-    DEBUG_PRINTLN(ga_callback_addrs[i].bytes.low, 16);
-    if (cemi_data->destination.value == ga_callback_addrs[i].value)
+    DEBUG_PRINTLN(callback_assignments[i].address.bytes.low, 16);
+    if (cemi_data->destination.value == callback_assignments[i].address.value)
     {
       DEBUG_PRINTLN(F("Found match"));
       uint8_t data[cemi_data->data_len];
       memcpy(data, cemi_data->data, cemi_data->data_len);
       data[0] = data[0] & 0x3F;
-      callbacks[ga_callbacks[i]].fkt(ct, cemi_data->destination, cemi_data->data_len, data);
+      callbacks[callback_assignments[i].callback_id].fkt(ct, cemi_data->destination, cemi_data->data_len, data);
       return;
     }
   }
