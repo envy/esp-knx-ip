@@ -262,6 +262,7 @@ typedef uint8_t config_id_t;
 typedef struct __config
 {
   config_type_t type;
+  String name;
   uint8_t offset;
   uint8_t len;
   enable_condition_t cond;
@@ -406,7 +407,6 @@ class ESPKNXIP {
     config_id_t registered_configs;
     uint8_t custom_config_data[MAX_CONFIG_SPACE];
     uint8_t custom_config_default_data[MAX_CONFIG_SPACE];
-    String custom_config_names[MAX_CONFIGS];
     config_t custom_configs[MAX_CONFIGS];
 
     uint16_t ntohs(uint16_t);

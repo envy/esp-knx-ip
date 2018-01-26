@@ -99,7 +99,7 @@ void ESPKNXIP::__handle_root()
       m += F("<form action='" __CONFIG_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<div class='input-group-prepend'><span class='input-group-text'>");
-      m += custom_config_names[i];
+      m += custom_configs[i].name;
       m += F("</span></div>");
 
       switch (custom_configs[i].type)
@@ -615,8 +615,8 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
     return -1;
 
   config_id_t id = registered_configs;
-  custom_config_names[id] = name;
 
+  custom_configs[id].name = name;
   custom_configs[id].type = CONFIG_TYPE_STRING;
   custom_configs[id].len = sizeof(uint8_t) + len;
   custom_configs[id].cond = cond;
@@ -638,8 +638,8 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, enable_
     return -1;
 
   config_id_t id = registered_configs;
-  custom_config_names[id] = name;
 
+  custom_configs[id].name = name;
   custom_configs[id].type = CONFIG_TYPE_INT;
   custom_configs[id].len = sizeof(uint8_t) + sizeof(int32_t);
   custom_configs[id].cond = cond;
@@ -661,8 +661,8 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default, enable_co
     return -1;
 
   config_id_t id = registered_configs;
-  custom_config_names[id] = name;
 
+  custom_configs[id].name = name;
   custom_configs[id].type = CONFIG_TYPE_BOOL;
   custom_configs[id].len = sizeof(uint8_t) + sizeof(uint8_t);
   custom_configs[id].cond = cond;
@@ -684,8 +684,8 @@ config_id_t ESPKNXIP::config_register_ga(String name, enable_condition_t cond)
     return -1;
 
   config_id_t id = registered_configs;
-  custom_config_names[id] = name;
 
+  custom_configs[id].name = name;
   custom_configs[id].type = CONFIG_TYPE_GA;
   custom_configs[id].len = sizeof(uint8_t) + sizeof(address_t);
   custom_configs[id].cond = cond;
