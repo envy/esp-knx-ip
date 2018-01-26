@@ -73,11 +73,11 @@ void ESPKNXIP::__handle_root()
   m += F("<form action='" __PHYS_PATH "' method='POST'>");
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
   m += F("<div class='input-group-prepend'><span class='input-group-text'>Physical address</span></div>");
-  m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
+  m += F("<input class='form-control' type='number' name='area' min='1' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
-  m += F("<input class='form-control' type='number' name='line' min='0' max='15' value='");
+  m += F("<input class='form-control' type='number' name='line' min='1' max='15' value='");
   m += String(physaddr.bytes.high & 0x0F);
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
@@ -375,7 +375,9 @@ ESPKNXIP::ESPKNXIP() : registered_callback_assignments(0), registered_callbacks(
 {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("ESPKNXIP starting up");
-  physaddr.value = 0;
+  // Default physical address is 1.1.0
+  physaddr.bytes.high = (/*area*/1 << 4) | /*line*/1;
+  physaddr.bytes.low = /*member*/0;
   memset(callback_assignments, 0, MAX_CALLBACK_ASSIGNMENTS * sizeof(callback_assignment_t));
   memset(callbacks, 0, MAX_CALLBACKS * sizeof(callback_fptr_t));
   memset(custom_config_data, 0, MAX_CONFIG_SPACE * sizeof(uint8_t));
