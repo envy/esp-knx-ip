@@ -250,6 +250,12 @@ typedef enum __config_flags
 } config_flags_t;
 
 typedef bool (*EnableCondition)(void);
+typedef void (*callback_fptr_t)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
+
+typedef uint8_t callback_id_t;
+typedef uint8_t callback_assignment_id_t;
+typedef uint8_t config_id_t;
+
 
 typedef struct __config
 {
@@ -259,10 +265,11 @@ typedef struct __config
   EnableCondition cond;
 } config_t;
 
-typedef uint8_t callback_id_t;
-typedef uint8_t config_id_t;
-
-typedef void (*GACallback)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
+typedef struct __callback
+{
+  callback_fptr_t fkt;
+  String name;
+} callback_t;
 
 class ESPKNXIP {
   public:
@@ -275,8 +282,8 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t register_callback(String name, GACallback cb);
-    callback_id_t register_callback(const char *name, GACallback cb);
+    callback_id_t register_callback(String name, callback_fptr_t cb);
+    callback_id_t register_callback(const char *name, callback_fptr_t cb);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, EnableCondition cond = nullptr);
@@ -358,17 +365,19 @@ class ESPKNXIP {
     void __config_set_bool(config_id_t id, bool val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
+    callback_assignment_id_t __callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
+    void __callback_delete_assignment(callback_assignment_id_t id);
+
     ESP8266WebServer *server;
     address_t physaddr;
     WiFiUDP udp;
 
-    uint8_t registered_ga_callbacks;
+    callback_assignment_id_t registered_ga_callbacks;
     address_t ga_callback_addrs[MAX_GA_CALLBACKS];
     callback_id_t ga_callbacks[MAX_GA_CALLBACKS];
 
     callback_id_t registered_callbacks;
-    GACallback callbacks[MAX_CALLBACKS];
-    String callback_names[MAX_CALLBACKS];
+    callback_t callbacks[MAX_CALLBACKS];
 
     config_id_t registered_configs;
     uint8_t custom_config_data[MAX_CONFIG_SPACE];
@@ -377,8 +386,6 @@ class ESPKNXIP {
     config_t custom_configs[MAX_CONFIGS];
 
     uint16_t ntohs(uint16_t);
-    int register_GA_callback(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
-    int delete_GA_callback(int id);
 };
 
 // Global "singleton" object
