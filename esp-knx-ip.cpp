@@ -968,6 +968,15 @@ void ESPKNXIP::send3ByteColor(address_t const &receiver, knx_command_type_t ct, 
   send(receiver, ct, 4, buf);
 }
 
+color_t ESPKNXIP::data_to_3byte_color(uint8_t *data)
+{
+  color_t color;
+  color.red = data[1];
+  color.green = data[2];
+  color.blue = data[3];
+  return color;
+}
+
 void ESPKNXIP::send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val)
 {
   uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
