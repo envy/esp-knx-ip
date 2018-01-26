@@ -345,6 +345,11 @@ class ESPKNXIP {
     void answer3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_ANSWER, red, green, blue); }
     void answer4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_ANSWER, val);}
 
+    int8_t  data_to_1byte_int(uint8_t *data);
+    int16_t data_to_2byte_int(uint8_t *data);
+    float   data_to_2byte_float(uint8_t *data);
+    float   data_to_4byte_float(uint8_t *data);
+
     static address_t GA_to_address(uint8_t area, uint8_t line, uint8_t member)
     {
       address_t tmp;

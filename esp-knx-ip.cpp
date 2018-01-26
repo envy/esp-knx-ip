@@ -909,10 +909,20 @@ void ESPKNXIP::send1ByteInt(address_t const &receiver, knx_command_type_t ct, in
   send(receiver, ct, 2, buf);
 }
 
+int8_t ESPKNXIP::data_to_1byte_int(uint8_t *data)
+{
+  return (int8_t)data[1];
+}
+
 void ESPKNXIP::send2ByteInt(address_t const &receiver, knx_command_type_t ct, int16_t val)
 {
   uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
   send(receiver, ct, 3, buf);
+}
+
+int16_t ESPKNXIP::data_to_2byte_int(uint8_t *data)
+{
+  return (int16_t)((data[1] << 8) | data[2]);
 }
 
 void ESPKNXIP::send2ByteFloat(address_t const &receiver, knx_command_type_t ct, float val)
@@ -929,6 +939,14 @@ void ESPKNXIP::send2ByteFloat(address_t const &receiver, knx_command_type_t ct, 
     msb |= 0x80;
   uint8_t buf[] = {0x00, (uint8_t)msb, (uint8_t)m};
   send(receiver, ct, 3, buf);
+}
+
+float ESPKNXIP::data_to_2byte_float(uint8_t *data)
+{
+  //uint8_t  sign = (data[1] & 0b10000000) >> 7;
+  uint8_t  expo = (data[1] & 0b01111000) >> 3;
+  int16_t mant = ((data[1] & 0b10000111) << 8) | data[2];
+  return 0.01f * mant * pow(2, expo);
 }
 
 void ESPKNXIP::send3ByteTime(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
@@ -954,6 +972,11 @@ void ESPKNXIP::send4ByteFloat(address_t const &receiver, knx_command_type_t ct, 
 {
   uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
   send(receiver, ct, 5, buf);
+}
+
+float ESPKNXIP::data_to_4byte_float(uint8_t *data)
+{
+  return (float)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) |data[4]);
 }
 
 void ESPKNXIP::loop()
