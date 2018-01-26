@@ -49,17 +49,24 @@ typedef enum __weekday
 	DPT_10_001_WEEKDAY_SUNDAY = 8,
 } weekday_t;
 
-typedef struct __time
+typedef struct __time_of_day
 {
-  weekday_t weekday;
-  uint8_t hours;
-  uint8_t minutes;
-  uint8_t seconds;
+	weekday_t weekday;
+	uint8_t hours;
+	uint8_t minutes;
+	uint8_t seconds;
 } time_of_day_t;
+
+typedef struct __date
+{
+	uint8_t day;
+	uint8_t month;
+	uint8_t year;
+} date_t;
 
 typedef struct __color
 {
-  uint8_t red;
-  uint8_t green;
-  uint8_t blue;
+	uint8_t red;
+	uint8_t green;
+	uint8_t blue;
 } color_t;

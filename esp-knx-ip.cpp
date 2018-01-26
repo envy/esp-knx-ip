@@ -972,6 +972,15 @@ void ESPKNXIP::send3ByteDate(address_t const &receiver, knx_command_type_t ct, u
   send(receiver, ct, 4, buf);
 }
 
+date_t ESPKNXIP::data_to_3byte_data(uint8_t *data)
+{
+  date_t date;
+  date.day = (data[1] & 0b00011111);
+  date.month = (data[2] & 0b00001111);
+  date.year = (data[3] & 0b01111111);
+  return date;
+}
+
 void ESPKNXIP::send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
 {
   uint8_t buf[] = {0x00, red, green, blue};

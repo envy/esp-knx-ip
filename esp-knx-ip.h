@@ -321,6 +321,7 @@ class ESPKNXIP {
     void send3ByteTime(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
     void send3ByteTime(address_t const &receiver, knx_command_type_t ct, time_of_day_t const &time) { send3ByteTime(receiver, ct, time.weekday, time.hours, time.minutes, time.seconds); }
     void send3ByteDate(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
+    void send3ByteDate(address_t const &receiver, knx_command_type_t ct, date_t const &date) { send3ByteDate(receiver, ct, date.day, date.month, date.year); }
     void send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
     void send3ByteColor(address_t const &receiver, knx_command_type_t ct, color_t const &color) { send3ByteColor(receiver, ct, color.red, color.green, color.blue); }
     void send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
@@ -334,6 +335,7 @@ class ESPKNXIP {
     void write3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_WRITE, weekday, hours, minutes, seconds); }
     void write3ByteTime(address_t const &receiver, time_of_day_t const &time) { send3ByteTime(receiver, KNX_CT_WRITE, time.weekday, time.hours, time.minutes, time.seconds); }
     void write3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_WRITE, day, month, year); }
+    void write3ByteDate(address_t const &receiver, date_t const &date) { send3ByteDate(receiver, KNX_CT_WRITE, date.day, date.month, date.year); }
     void write3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_WRITE, red, green, blue); }
     void write3ByteColor(address_t const &receiver, color_t const &color) { send3ByteColor(receiver, KNX_CT_WRITE, color); }
     void write4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_WRITE, val);}
@@ -347,6 +349,7 @@ class ESPKNXIP {
     void answer3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_ANSWER, weekday, hours, minutes, seconds); }
     void answer3ByteTime(address_t const &receiver, time_of_day_t const &time) { send3ByteTime(receiver, KNX_CT_ANSWER, time.weekday, time.hours, time.minutes, time.seconds); }
     void answer3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_ANSWER, day, month, year); }
+    void answer3ByteDate(address_t const &receiver, date_t const &date) { send3ByteDate(receiver, KNX_CT_ANSWER, date.day, date.month, date.year); }
     void answer3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_ANSWER, red, green, blue); }
     void answer3ByteColor(address_t const &receiver, color_t const &color) { send3ByteColor(receiver, KNX_CT_ANSWER, color); }
     void answer4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_ANSWER, val);}
@@ -357,6 +360,7 @@ class ESPKNXIP {
     float         data_to_4byte_float(uint8_t *data);
     color_t       data_to_3byte_color(uint8_t *data);
     time_of_day_t data_to_3byte_time(uint8_t *data);
+    date_t        data_to_3byte_data(uint8_t *data);
 
     static address_t GA_to_address(uint8_t area, uint8_t line, uint8_t member)
     {
