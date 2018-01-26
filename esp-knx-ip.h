@@ -13,19 +13,22 @@
  * Config space is restriced by EEPROM_SIZE (default 1024).
  * Required EEPROM size is 8 + MAX_GA_CALLBACKS * 3 + 2 + MAX_CONFIG_SPACE which is 552 by default
  */
-#define EEPROM_SIZE               1024
-#define MAX_CALLBACK_ASSIGNMENTS  10 // Maximum number of group address callbacks that can be stored (Default 10)
-#define MAX_CALLBACKS             10 // Maximum number of callbacks that can be stored (Default 10)
-#define MAX_CONFIGS               20 // Maximum number of config items that can be stored (Default 20)
-#define MAX_CONFIG_SPACE          0x0200 // Maximum number of bytes that can be stored for custom config (Default: 512)
+#define EEPROM_SIZE               1024 // [Default 1024]
+#define MAX_CALLBACK_ASSIGNMENTS  10 // [Default 10] Maximum number of group address callbacks that can be stored (Default 10)
+#define MAX_CALLBACKS             10 // [Default 10] Maximum number of callbacks that can be stored (Default 10)
+#define MAX_CONFIGS               20 // [Default 20] Maximum number of config items that can be stored (Default 20)
+#define MAX_CONFIG_SPACE          0x0200 // [Default 0x0200] Maximum number of bytes that can be stored for custom config (Default: 512)
+
+// Callbacks
+#define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  0 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
 
 // Webserver related
-#define USE_BOOTSTRAP             // Uncomment to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com
-#define ROOT_PREFIX               ""  // This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
+#define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
 
 // These values normally don't need adjustment
-#define MULTICAST_PORT            3671 // Default KNX/IP port is 3671
-#define MULTICAST_IP              IPAddress(224, 0, 23, 12) // Default KNX/IP ip is 224.0.23.12
+#define MULTICAST_PORT            3671 // [Default 3671]
+#define MULTICAST_IP              IPAddress(224, 0, 23, 12) // [Default IPAddress(224, 0, 23, 12)]
 
 // Uncomment to enable printing out debug messages.
 #define ESP_KNX_DEBUG

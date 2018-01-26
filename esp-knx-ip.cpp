@@ -9,7 +9,7 @@
 void ESPKNXIP::__handle_root()
 {
   String m = F("<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>");
-#ifdef USE_BOOTSTRAP
+#if USE_BOOTSTRAP
   m += F("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css' integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' crossorigin='anonymous'>");
   m += F("<style>.input-group-insert > .input-group-text { border-radius: 0; }</style>");
 #endif
@@ -1067,7 +1067,11 @@ void ESPKNXIP::__loop_knx()
       memcpy(data, cemi_data->data, cemi_data->data_len);
       data[0] = data[0] & 0x3F;
       callbacks[callback_assignments[i].callback_id].fkt(ct, cemi_data->destination, cemi_data->data_len, data);
+#if ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS
+      continue;
+#else
       return;
+#endif
     }
   }
 
