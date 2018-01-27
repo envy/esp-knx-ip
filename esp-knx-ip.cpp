@@ -73,11 +73,11 @@ void ESPKNXIP::__handle_root()
   m += F("<form action='" __PHYS_PATH "' method='POST'>");
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
   m += F("<div class='input-group-prepend'><span class='input-group-text'>Physical address</span></div>");
-  m += F("<input class='form-control' type='number' name='area' min='1' max='15' value='");
+  m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
   m += String((physaddr.bytes.high & 0xF0) >> 4);
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
-  m += F("<input class='form-control' type='number' name='line' min='1' max='15' value='");
+  m += F("<input class='form-control' type='number' name='line' min='0' max='15' value='");
   m += String(physaddr.bytes.high & 0x0F);
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
