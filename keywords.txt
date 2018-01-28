@@ -1,49 +1,66 @@
 # datatypes
-knx			KEYWORD1
-address_t	KEYWORD1
-GACallback	KEYWORD1
-knx_command_type_t KEYWORD1
+address_t	DATA_TYPE
+callback_id_t	DATA_TYPE
+callback_assignment_id_t	DATA_TYPE
+config_id_t	DATA_TYPE
+enable_condition_t	DATA_TYPE
+callback_fptr_t	DATA_TYPE
+knx_command_type_t	DATA_TYPE
 
 # methods
-setup KEYWORD2
-loop KEYWORD2
-register_callback KEYWORD2
-config_register_string KEYWORD2
-config_register_int KEYWORD2
-config_register_ga KEYWORD2
-config_get_string KEYWORD2
-config_get_int KEYWORD2
-config_get_ga KEYWORD2
-config_set_string KEYWORD2
-config_set_int KEYWORD2
-config_set_ga KEYWORD2
-send1Bit KEYWORD2
-send2Bit KEYWORD2
-send4Bit KEYWORD2
-send1ByteInt KEYWORD2
-send2ByteInt KEYWORD2
-send2ByteFloat KEYWORD2
-send3ByteTime KEYWORD2
-send3ByteDate KEYWORD2
-send3ByteColor KEYWORD2
-send4ByteFloat KEYWORD2
-write1Bit KEYWORD2
-write2Bit KEYWORD2
-write4Bit KEYWORD2
-write1ByteInt KEYWORD2
-write2ByteInt KEYWORD2
-write2ByteFloat KEYWORD2
-write3ByteTime KEYWORD2
-write3ByteDate KEYWORD2
-write3ByteColor KEYWORD2
-write4ByteFloat KEYWORD2
-answer1Bit KEYWORD2
-answer2Bit KEYWORD2
-answer4Bit KEYWORD2
-answer1ByteInt KEYWORD2
-answer2ByteInt KEYWORD2
-answer2ByteFloat KEYWORD2
-answer3ByteTime KEYWORD2
-answer3ByteDate KEYWORD2
-answer3ByteColor KEYWORD2
-answer4ByteFloat KEYWORD2
+setup	KEYWORD2
+loop	KEYWORD2
+register_callback	KEYWORD2
+config_register_string	KEYWORD2
+config_register_int	KEYWORD2
+config_register_ga	KEYWORD2
+config_register_bool	KEYWORD2
+config_get_string	KEYWORD2
+config_get_int	KEYWORD2
+config_get_ga	KEYWORD2
+config_get_bool	KEYWORD2
+config_set_string	KEYWORD2
+config_set_int	KEYWORD2
+config_set_ga	KEYWORD2
+config_set_bool	KEYWORD2
+send1Bit	KEYWORD2
+send2Bit	KEYWORD2
+send4Bit	KEYWORD2
+send1ByteInt	KEYWORD2
+send2ByteInt	KEYWORD2
+send2ByteFloat	KEYWORD2
+send3ByteTime	KEYWORD2
+send3ByteDate	KEYWORD2
+send3ByteColor	KEYWORD2
+send4ByteFloat	KEYWORD2
+write1Bit	KEYWORD2
+write2Bit	KEYWORD2
+write4Bit	KEYWORD2
+write1ByteInt	KEYWORD2
+write2ByteInt	KEYWORD2
+write2ByteFloat	KEYWORD2
+write3ByteTime	KEYWORD2
+write3ByteDate	KEYWORD2
+write3ByteColor	KEYWORD2
+write4ByteFloat	KEYWORD2
+answer1Bit	KEYWORD2
+answer2Bit	KEYWORD2
+answer4Bit	KEYWORD2
+answer1ByteInt	KEYWORD2
+answer2ByteInt	KEYWORD2
+answer2ByteFloat	KEYWORD2
+answer3ByteTime	KEYWORD2
+answer3ByteDate	KEYWORD2
+answer3ByteColor	KEYWORD2
+answer4ByteFloat	KEYWORD2
+
+data_to_1byte_int	KEYWORD 2
+data_to_2byte_int	KEYWORD 2
+data_to_2byte_float	KEYWORD 2
+data_to_4byte_float	KEYWORD 2
+data_to_3byte_color	KEYWORD 2
+data_to_3byte_time	KEYWORD 2
+data_to_3byte_data	KEYWORD 2
+
+# constants
+knx	LITERAL1
