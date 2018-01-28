@@ -18,16 +18,19 @@ const char* pass = "my-pw";    // your network password
 config_id_t my_GA;
 config_id_t param_id;
 
+int8_t some_var = 0;
+
 void setup()
 {
 	// Register a callback that is called when a configurable group address is receiving a telegram
-	knx.register_callback("callback_name", my_callback);
-
-	// Register a configurable group address for sending out answers
-	my_GA = knx.config_register_ga("send to this GA");
+	knx.register_callback("Set/Get callback", my_callback);
+	knx.register_callback("Write callback", my_other_callback);
 
 	int default_val = 21;
 	param_id = knx.config_register_int("My Parameter", default_val);
+
+	// Register a configurable group address for sending out answers
+	my_GA = knx.config_register_ga("Answer GA");
 
 	knx.load(); // Try to load a config from EEPROM
 
@@ -37,8 +40,6 @@ void setup()
 	}
 
 	knx.start(); // Start everything. Must be called after WiFi connection has been established
-
-
 }
 
 void loop()
@@ -52,18 +53,30 @@ void my_callback(knx_command_type_t ct, address_t const &received_on, uint8_t da
 	switch (ct)
 	{
 	case KNX_CT_WRITE:
-		// Do something, like a digitalWrite
-		// Or send a telegram like this:
-		uint8_t my_msg = 42;
-		knx.write1ByteInt(knx.config_get_ga(my_GA), my_msg);
+		// Save received data
+		some_var = knx.data_to_1byte_int(data);
 		break;
 	case KNX_CT_READ:
-		// Answer with a value
-		int value = knx.config_get_int(param_id);
-		knx.answer1ByteInt(received_on, (uint8_t)value);
+		// Answer with saved data
+		knx.answer1ByteInt(received_on, some_var);
 		break;
 	}
 }
+
+void my_other_callback(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+{
+
+	switch (ct)
+	{
+	case KNX_CT_WRITE:
+		// Write an answer somewhere else
+		int value = knx.config_get_int(param_id);
+		address_t ga = knx.config_get_ga(my_GA);
+		knx.answer1ByteInt(ga, (int8_t)value);
+		break;
+	}
+}
+
 ```
 
 ## How to configure (buildtime) ##
