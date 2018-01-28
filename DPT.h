@@ -1,7 +1,7 @@
 /**
  * esp-knx-ip library for KNX/IP communication on an ESP8266
  * Author: Nico Weichbrodt <envy>
- * License: Not yet decided on one...
+ * License: MIT
  */
 
 typedef enum __dpt_1_001
