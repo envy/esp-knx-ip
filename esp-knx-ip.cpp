@@ -22,6 +22,10 @@ void ESPKNXIP::__handle_root()
   {
     for (uint8_t i = 0; i < registered_callback_assignments; ++i)
     {
+      if (callbacks[callback_assignments[i].callback_id].cond && !callbacks[callback_assignments[i].callback_id].cond())
+      {
+        continue;
+      }
       m += F("<form action='" __DELETE_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<div class='input-group-prepend'><span class='input-group-text'>");
@@ -55,6 +59,10 @@ void ESPKNXIP::__handle_root()
     m += F("<select class='form-control' name='cb'>");
     for (uint8_t i = 0; i < registered_callbacks; ++i)
     {
+      if (callbacks[i].cond && !callbacks[i].cond())
+      {
+        continue;
+      }
       m += F("<option value=\"");
       m += i;
       m += F("\">");
@@ -93,7 +101,7 @@ void ESPKNXIP::__handle_root()
     for (config_id_t i = 0; i < registered_configs; ++i)
     {
       // Check if this config option has a enable condition and if so check that condition
-      if (custom_configs[i].cond != nullptr && !custom_configs[i].cond())
+      if (custom_configs[i].cond && !custom_configs[i].cond())
         continue;
 
       m += F("<form action='" __CONFIG_PATH "' method='POST'>");
@@ -588,7 +596,7 @@ void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
   registered_callback_assignments--;
 }
 
-callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb)
+callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb, enable_condition_t cond)
 {
   if (registered_callbacks >= MAX_CALLBACKS)
     return -1;
@@ -597,13 +605,14 @@ callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb)
 
   callbacks[id].name = name;
   callbacks[id].fkt = cb;
+  callbacks[id].cond = cond;
   registered_callbacks++;
   return id;
 }
 
-callback_id_t ESPKNXIP::register_callback(const char *name, callback_fptr_t cb)
+callback_id_t ESPKNXIP::register_callback(const char *name, callback_fptr_t cb, enable_condition_t cond)
 {
-  return register_callback(String(name), cb);
+  return register_callback(String(name), cb, cond);
 }
 
 /**
@@ -1165,6 +1174,15 @@ void ESPKNXIP::__loop_knx()
     if (cemi_data->destination.value == callback_assignments[i].address.value)
     {
       DEBUG_PRINTLN(F("Found match"));
+      if (callbacks[callback_assignments[i].callback_id].cond && !callbacks[callback_assignments[i].callback_id].cond())
+      {
+        DEBUG_PRINTLN(F("But it's disabled"));
+#if ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS
+        continue;
+#else
+        return;
+#endif
+      }
       uint8_t data[cemi_data->data_len];
       memcpy(data, cemi_data->data, cemi_data->data_len);
       data[0] = data[0] & 0x3F;

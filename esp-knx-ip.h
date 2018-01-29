@@ -271,6 +271,7 @@ typedef struct __config
 typedef struct __callback
 {
   callback_fptr_t fkt;
+  enable_condition_t cond;
   String name;
 } callback_t;
 
@@ -291,8 +292,8 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t register_callback(String name, callback_fptr_t cb);
-    callback_id_t register_callback(const char *name, callback_fptr_t cb);
+    callback_id_t register_callback(String name, callback_fptr_t cb, enable_condition_t cond = nullptr);
+    callback_id_t register_callback(const char *name, callback_fptr_t cb, enable_condition_t cond = nullptr);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
