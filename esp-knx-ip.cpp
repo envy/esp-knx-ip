@@ -502,14 +502,17 @@ void ESPKNXIP::restore_from_eeprom()
 
   //EEPROM.get(address, custom_config_data);
   //address += sizeof(custom_config_data);
-
+  uint32_t conf_offset = address;
   for (uint8_t i = 0; i < registered_configs; ++i)
   {
     // First byte is flags.
     config_flags_t flags = CONFIG_FLAGS_NO_FLAGS;
     flags = (config_flags_t)EEPROM.read(address);
-    DEBUG_PRINT("Flag in EEPROM: ");
+    DEBUG_PRINT("Flag in EEPROM @ ");
+    DEBUG_PRINT(address - conf_offset);
+    DEBUG_PRINT(": ");
     DEBUG_PRINTLN(flags, BIN);
+    custom_config_data[custom_configs[i].offset] = flags;
     if (flags & CONFIG_FLAGS_VALUE_SET)
     {
       DEBUG_PRINTLN("Non-default value");
@@ -629,6 +632,16 @@ config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _d
 
   registered_configs++;
 
+  DEBUG_PRINT("Registered config >");
+  DEBUG_PRINT(name);
+  DEBUG_PRINT("< @ ");
+  DEBUG_PRINT(id);
+  DEBUG_PRINT("/string[");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT("+");
+  DEBUG_PRINT(custom_configs[id].len);
+  DEBUG_PRINTLN("]");
+
   return id;
 }
 
@@ -652,6 +665,16 @@ config_id_t ESPKNXIP::config_register_int(String name, int32_t _default, enable_
 
   registered_configs++;
 
+  DEBUG_PRINT("Registered config >");
+  DEBUG_PRINT(name);
+  DEBUG_PRINT("< @ ");
+  DEBUG_PRINT(id);
+  DEBUG_PRINT("/int[");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT("+");
+  DEBUG_PRINT(custom_configs[id].len);
+  DEBUG_PRINTLN("]");
+
   return id;
 }
 
@@ -674,6 +697,16 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default, enable_co
   __config_set_bool(id, _default);
 
   registered_configs++;
+
+  DEBUG_PRINT("Registered config >");
+  DEBUG_PRINT(name);
+  DEBUG_PRINT("< @ ");
+  DEBUG_PRINT(id);
+  DEBUG_PRINT("/bool[");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT("+");
+  DEBUG_PRINT(custom_configs[id].len);
+  DEBUG_PRINTLN("]");
 
   return id;
 }
@@ -700,12 +733,30 @@ config_id_t ESPKNXIP::config_register_ga(String name, enable_condition_t cond)
 
   registered_configs++;
 
+  DEBUG_PRINT("Registered config >");
+  DEBUG_PRINT(name);
+  DEBUG_PRINT("< @ ");
+  DEBUG_PRINT(id);
+  DEBUG_PRINT("/ga[");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT("+");
+  DEBUG_PRINT(custom_configs[id].len);
+  DEBUG_PRINTLN("]");
+
   return id;
 }
 
 void ESPKNXIP::__config_set_flags(config_id_t id, config_flags_t flags)
 {
-  custom_config_data[custom_configs[id].offset] |= flags;
+  DEBUG_PRINT("Setting flag @ ");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT(" to ");
+  DEBUG_PRINT(custom_config_data[custom_configs[id].offset], BIN);
+  DEBUG_PRINT(" | ");
+  DEBUG_PRINT(flags, BIN);
+  custom_config_data[custom_configs[id].offset] |= (uint8_t)flags;
+  DEBUG_PRINT(" = ");
+  DEBUG_PRINTLN(custom_config_data[custom_configs[id].offset], BIN);
 }
 
 void ESPKNXIP::config_set_string(config_id_t id, String val)
