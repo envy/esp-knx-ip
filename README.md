@@ -79,6 +79,10 @@ void my_other_callback(knx_command_type_t ct, address_t const &received_on, uint
 
 ```
 
+## Prerequisities ##
+
+I recommend version 2.3.0 of the esp8266 board libraries. With 2.4.0 I experienced unstable receivement of packets.
+
 ## How to configure (buildtime) ##
 
 Open the `esp-knx-ip.h` and take a look at the config options at the top inside the block marked `CONFIG`
