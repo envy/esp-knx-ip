@@ -175,9 +175,16 @@ void ESPKNXIP::__handle_root()
   // Load Defaults
   m += F("<div class='col-auto'>");
   m += F("<form action='" __RESTORE_PATH "' method='POST'>");
-  m += F("<button type='submit' class='btn btn-info'>Restore defaults</button>");
+  m += F("<button type='submit' class='btn btn-warning'>Restore defaults</button>");
   m += F("</form>");
   m += F("</div>");
+  // Reboot
+  m += F("<div class='col-auto'>");
+  m += F("<form action='" __REBOOT_PATH "' method='POST'>");
+  m += F("<button type='submit' class='btn btn-danger'>Reboot</button>");
+  m += F("</form>");
+  m += F("</div>");
+
   m += F("</div>"); // row
 
   // End of page
@@ -352,6 +359,16 @@ end:
   server->send(302);
 }
 
+void ESPKNXIP::__handle_reboot()
+{
+  DEBUG_PRINTLN(F("Rebooting!"));
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
+  server->send(302);
+  delay(1000);
+  ESP.restart();
+  //while(1);
+}
+
 void ESPKNXIP::__handle_eeprom()
 {
   DEBUG_PRINTLN(F("EEPROM called"));
@@ -441,6 +458,9 @@ void ESPKNXIP::__start()
   });
   server->on(__RESTORE_PATH, [this](){
     __handle_restore();
+  });
+  server->on(__REBOOT_PATH, [this](){
+    __handle_reboot();
   });
   server->begin();
 
