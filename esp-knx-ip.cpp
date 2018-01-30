@@ -1090,6 +1090,7 @@ void ESPKNXIP::__loop_knx()
   uint8_t buf[read];
 
   udp.read(buf, read);
+  udp.flush();
 
   DEBUG_PRINT(F("Got packet:"));
   for (int i = 0; i < read; ++i)
