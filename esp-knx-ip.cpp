@@ -132,6 +132,30 @@ void ESPKNXIP::__handle_root()
           m += F("/>");
           m += F("</span></div>");
           break;
+        case CONFIG_TYPE_OPTIONS:
+        {
+          m += F("<select class='custom-select' name='value'>");
+          option_entry_t *cur = custom_configs[i].data.options;
+          while (cur->name != nullptr)
+          {
+            if (config_get_options(i) == cur->value)
+            {
+              m += F("<option selected value='");
+            }
+            else
+            {
+              m += F("<option value='");
+            }
+            m += cur->value;
+            m += F("'>");
+            m += String(cur->name);
+            m += F("</option>");
+            cur++;
+          }
+          m += F("");
+          m += F("</select>");
+          break;
+        }
         case CONFIG_TYPE_GA:
           address_t a = config_get_ga(i);
           m += F("<input class='form-control' type='number' name='area' min='0' max='31' value='");
@@ -324,6 +348,14 @@ void ESPKNXIP::__handle_config()
       {
         __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
         __config_set_bool(id, server->arg(F("value")).compareTo(F("on")) == 0);
+        break;
+      }
+      case CONFIG_TYPE_OPTIONS:
+      {
+        uint8_t val = (uint8_t)server->arg(F("value")).toInt();
+        DEBUG_PRINT(F("Value: "));
+        DEBUG_PRINTLN(val);
+        config_set_options(id, val);
         break;
       }
       case CONFIG_TYPE_GA:
@@ -740,6 +772,44 @@ config_id_t ESPKNXIP::config_register_bool(String name, bool _default, enable_co
   return id;
 }
 
+config_id_t ESPKNXIP::config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond)
+{
+  if (registered_configs >= MAX_CONFIGS)
+    return -1;
+
+  if (options == nullptr || options->name == nullptr)
+    return -1;
+
+  config_id_t id = registered_configs;
+
+  custom_configs[id].name = name;
+  custom_configs[id].type = CONFIG_TYPE_OPTIONS;
+  custom_configs[id].len = sizeof(uint8_t) + sizeof(uint8_t);
+  custom_configs[id].cond = cond;
+  if (id == 0)
+    custom_configs[id].offset = 0;
+  else
+    custom_configs[id].offset = custom_configs[id - 1].offset + custom_configs[id - 1].len;
+
+  custom_configs[id].data.options = options;
+
+  __config_set_options(id, _default);
+
+  registered_configs++;
+
+  DEBUG_PRINT("Registered config >");
+  DEBUG_PRINT(name);
+  DEBUG_PRINT("< @ ");
+  DEBUG_PRINT(id);
+  DEBUG_PRINT("/opt[");
+  DEBUG_PRINT(custom_configs[id].offset);
+  DEBUG_PRINT("+");
+  DEBUG_PRINT(custom_configs[id].len);
+  DEBUG_PRINTLN("]");
+
+  return id;
+}
+
 config_id_t ESPKNXIP::config_register_ga(String name, enable_condition_t cond)
 {
   if (registered_configs >= MAX_CONFIGS)
@@ -842,6 +912,31 @@ void ESPKNXIP::__config_set_bool(config_id_t id, bool val)
   custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] = val ? 1 : 0;
 }
 
+void ESPKNXIP::config_set_options(config_id_t id, uint8_t val)
+{
+  if (id >= registered_configs)
+    return;
+  if (custom_configs[id].type != CONFIG_TYPE_OPTIONS)
+    return;
+
+  option_entry_t *cur = custom_configs[id].data.options;
+  while (cur->name != nullptr)
+  {
+    if (cur->value == val)
+    {
+      __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
+      __config_set_options(id, val);
+      break;
+    }
+    cur++;
+  }
+}
+
+void ESPKNXIP::__config_set_options(config_id_t id, uint8_t val)
+{
+  custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] = val;
+}
+
 void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
 {
   if (id >= registered_configs)
@@ -884,6 +979,14 @@ bool ESPKNXIP::config_get_bool(config_id_t id)
     return false;
 
   return custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] != 0;
+}
+
+uint8_t ESPKNXIP::config_get_options(config_id_t id)
+{
+  if (id >= registered_configs)
+    return false;
+
+  return custom_config_data[custom_configs[id].offset + sizeof(uint8_t)];
 }
 
 address_t ESPKNXIP::config_get_ga(config_id_t id)

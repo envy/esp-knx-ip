@@ -244,6 +244,7 @@ typedef enum __config_type
   CONFIG_TYPE_INT,
   CONFIG_TYPE_BOOL,
   CONFIG_TYPE_STRING,
+  CONFIG_TYPE_OPTIONS,
   CONFIG_TYPE_GA,
 } config_type_t;
 
@@ -260,6 +261,12 @@ typedef uint8_t callback_id_t;
 typedef uint8_t callback_assignment_id_t;
 typedef uint8_t config_id_t;
 
+typedef struct __option_entry
+{
+  char *name;
+  uint8_t value;
+} option_entry_t;
+
 typedef struct __config
 {
   config_type_t type;
@@ -267,6 +274,9 @@ typedef struct __config
   uint8_t offset;
   uint8_t len;
   enable_condition_t cond;
+  union {
+    option_entry_t *options;
+  } data;
 } config_t;
 
 typedef struct __callback
@@ -300,16 +310,19 @@ class ESPKNXIP {
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
     config_id_t   config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
     config_id_t   config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
+    config_id_t   config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
     config_id_t   config_register_ga(String name, enable_condition_t cond = nullptr);
 
     String        config_get_string(config_id_t id);
     int32_t       config_get_int(config_id_t id);
     bool          config_get_bool(config_id_t id);
+    uint8_t       config_get_options(config_id_t id);
     address_t     config_get_ga(config_id_t id);
 
     void          config_set_string(config_id_t id, String val);
     void          config_set_int(config_id_t id, int32_t val);
     void          config_set_bool(config_id_t, bool val);
+    void          config_set_options(config_id_t id, uint8_t val);
     void          config_set_ga(config_id_t id, address_t val);
 
     // Send functions
@@ -392,6 +405,7 @@ class ESPKNXIP {
     void __config_set_string(config_id_t id, String &val);
     void __config_set_int(config_id_t id, int32_t val);
     void __config_set_bool(config_id_t id, bool val);
+    void __config_set_options(config_id_t id, uint8_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
     callback_assignment_id_t __callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
