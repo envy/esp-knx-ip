@@ -20,8 +20,6 @@ config_id_t hostname_id;
 config_id_t temp_rate_id;
 config_id_t enable_sending_id;
 
-callback_id_t temp_cb_id, hum_cb_id, pres_cb_id;
-
 Adafruit_BME280 bme;
 
 void setup() {
@@ -36,9 +34,9 @@ void setup() {
   hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
   pres_ga = knx.config_register_ga("Pressure", show_periodic_options);
 
-  temp_cb_id = knx.register_callback("Read Temperature", temp_cb);
-  hum_cb_id = knx.register_callback("Read Humidity", temp_cb);
-  pres_cb_id = knx.register_callback("Read Pressure", pres_cb);
+  knx.register_callback("Read Temperature", temp_cb);
+  knx.register_callback("Read Humidity", hum_cb);
+  knx.register_callback("Read Pressure", pres_cb);
 
   // Load previous values from EEPROM
   knx.load();

@@ -254,8 +254,16 @@ typedef enum __config_flags
   CONFIG_FLAGS_VALUE_SET = 1,
 } config_flags_t;
 
+typedef struct __message
+{
+  knx_command_type_t ct;
+  address_t received_on;
+  uint8_t data_len;
+  uint8_t *data;
+} message_t;
+
 typedef bool (*enable_condition_t)(void);
-typedef void (*callback_fptr_t)(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data);
+typedef void (*callback_fptr_t)(message_t const &msg, void *arg);
 
 typedef uint8_t callback_id_t;
 typedef uint8_t callback_assignment_id_t;
@@ -283,6 +291,7 @@ typedef struct __callback
 {
   callback_fptr_t fkt;
   enable_condition_t cond;
+  void *arg;
   String name;
 } callback_t;
 
@@ -303,8 +312,7 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t register_callback(String name, callback_fptr_t cb, enable_condition_t cond = nullptr);
-    callback_id_t register_callback(const char *name, callback_fptr_t cb, enable_condition_t cond = nullptr);
+    callback_id_t register_callback(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);

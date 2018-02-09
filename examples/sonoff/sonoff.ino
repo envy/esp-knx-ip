@@ -38,8 +38,20 @@ option_entry_t type_options[] = {
 
 config_id_t hostname_id;
 config_id_t type_id;
-config_id_t ch1_status_ga_id, ch2_status_ga_id, ch3_status_ga_id, ch4_status_ga_id;
-bool ch1_state = false, ch2_state = false, ch3_state = false, ch4_state = false;
+
+typedef struct __sonoff_channel
+{
+  int pin;
+  config_id_t status_ga_id;
+  bool state;
+} sonoff_channel_t;
+
+sonoff_channel_t channels[] = {
+  {CH1_PIN, 0, false},
+  {CH2_PIN, 0, false},
+  {CH3_PIN, 0, false},
+  {CH4_PIN, 0, false},
+};
 
 void setup()
 {
@@ -58,15 +70,15 @@ void setup()
   hostname_id = knx.config_register_string("Hostname", 20, String("sonoff"));
   type_id = knx.config_register_options("Type", type_options, SONOFF_TYPE_BASIC);
   
-  ch1_status_ga_id = knx.config_register_ga("Channel 1 Status GA");
-  ch2_status_ga_id = knx.config_register_ga("Channel 2 Status GA", is_4ch_or_4ch_pro);
-  ch3_status_ga_id = knx.config_register_ga("Channel 3 Status GA", is_4ch_or_4ch_pro);
-  ch4_status_ga_id = knx.config_register_ga("Channel 4 Status GA", is_4ch_or_4ch_pro);
+  channels[0].status_ga_id = knx.config_register_ga("Channel 1 Status GA");
+  channels[1].status_ga_id = knx.config_register_ga("Channel 2 Status GA", is_4ch_or_4ch_pro);
+  channels[2].status_ga_id = knx.config_register_ga("Channel 3 Status GA", is_4ch_or_4ch_pro);
+  channels[3].status_ga_id = knx.config_register_ga("Channel 4 Status GA", is_4ch_or_4ch_pro);
 
-  knx.register_callback("Channel 1", channel1_cb);
-  knx.register_callback("Channel 2", channel2_cb, is_4ch_or_4ch_pro);
-  knx.register_callback("Channel 3", channel3_cb, is_4ch_or_4ch_pro);
-  knx.register_callback("Channel 4", channel4_cb, is_4ch_or_4ch_pro);
+  knx.register_callback("Channel 1", channel_cb, &channels[0]);
+  knx.register_callback("Channel 2", channel_cb, &channels[1], is_4ch_or_4ch_pro);
+  knx.register_callback("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
+  knx.register_callback("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
 
   knx.load();
 
@@ -113,63 +125,18 @@ bool is_4ch_or_4ch_pro()
   return type == SONOFF_TYPE_4CH ||type == SONOFF_TYPE_4CH_PRO;
 }
 
-void channel1_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void channel_cb(message_t const &msg, void *arg)
 {
-  switch (ct)
+  sonoff_channel_t *chan = (sonoff_channel_t *)arg;
+  switch (msg.ct)
   {
     case KNX_CT_WRITE:
-      ch1_state = data[0];
-      Serial.println(ch1_state ? "Toggle on" : "Toggle off");
-      digitalWrite(CH1_PIN, ch1_state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(ch1_status_ga_id), ch1_state);
+      chan->state = msg.data[0];
+      Serial.println(chan->state ? "Toggle on" : "Toggle off");
+      digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+      knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
       break;
      case KNX_CT_READ:
-      knx.answer1Bit(received_on, ch1_state);
+      knx.answer1Bit(msg.received_on, chan->state);
   }
 }
-
-void channel2_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
-{
-  switch (ct)
-  {
-    case KNX_CT_WRITE:
-      ch2_state = data[0];
-      Serial.println(ch2_state ? "Toggle on" : "Toggle off");
-      digitalWrite(CH2_PIN, ch2_state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(ch2_status_ga_id), ch2_state);
-      break;
-     case KNX_CT_READ:
-      knx.answer1Bit(received_on, ch2_state);
-  }
-}
-
-void channel3_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
-{
-  switch (ct)
-  {
-    case KNX_CT_WRITE:
-      ch3_state = data[0];
-      Serial.println(ch3_state ? "Toggle on" : "Toggle off");
-      digitalWrite(CH3_PIN, ch3_state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(ch3_status_ga_id), ch3_state);
-      break;
-     case KNX_CT_READ:
-      knx.answer1Bit(received_on, ch3_state);
-  }
-}
-
-void channel4_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
-{
-  switch (ct)
-  {
-    case KNX_CT_WRITE:
-      ch4_state = data[0];
-      Serial.println(ch4_state ? "Toggle on" : "Toggle off");
-      digitalWrite(CH4_PIN, ch4_state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(ch4_status_ga_id), ch4_state);
-      break;
-     case KNX_CT_READ:
-      knx.answer1Bit(received_on, ch4_state);
-  }
-}
-

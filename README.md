@@ -48,25 +48,24 @@ void loop()
 }
 
 
-void my_callback(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void my_callback(message_t const &msg, void *arg)
 {
-	switch (ct)
+	switch (msg.ct)
 	{
 	case KNX_CT_WRITE:
 		// Save received data
-		some_var = knx.data_to_1byte_int(data);
+		some_var = knx.data_to_1byte_int(msg.data);
 		break;
 	case KNX_CT_READ:
 		// Answer with saved data
-		knx.answer1ByteInt(received_on, some_var);
+		knx.answer1ByteInt(msg.received_on, some_var);
 		break;
 	}
 }
 
-void my_other_callback(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void my_other_callback(message_t const &msg, void *arg)
 {
-
-	switch (ct)
+	switch (msg.ct)
 	{
 	case KNX_CT_WRITE:
 		// Write an answer somewhere else

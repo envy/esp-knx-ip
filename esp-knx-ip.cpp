@@ -648,7 +648,7 @@ void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
   registered_callback_assignments--;
 }
 
-callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb, enable_condition_t cond)
+callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb, void *arg, enable_condition_t cond)
 {
   if (registered_callbacks >= MAX_CALLBACKS)
     return -1;
@@ -658,13 +658,9 @@ callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb, enabl
   callbacks[id].name = name;
   callbacks[id].fkt = cb;
   callbacks[id].cond = cond;
+  callbacks[id].arg = arg;
   registered_callbacks++;
   return id;
-}
-
-callback_id_t ESPKNXIP::register_callback(const char *name, callback_fptr_t cb, enable_condition_t cond)
-{
-  return register_callback(String(name), cb, cond);
 }
 
 /**
@@ -1205,7 +1201,9 @@ void ESPKNXIP::__loop_knx()
 {
   int read = udp.parsePacket();
   if (!read)
+  {
     return;
+  }
   DEBUG_PRINTLN(F(""));
   DEBUG_PRINT(F("LEN: "));
   DEBUG_PRINTLN(read);
@@ -1310,7 +1308,12 @@ void ESPKNXIP::__loop_knx()
       uint8_t data[cemi_data->data_len];
       memcpy(data, cemi_data->data, cemi_data->data_len);
       data[0] = data[0] & 0x3F;
-      callbacks[callback_assignments[i].callback_id].fkt(ct, cemi_data->destination, cemi_data->data_len, data);
+      message_t msg = {};
+      msg.ct = ct;
+      msg.received_on = cemi_data->destination;
+      msg.data_len = cemi_data->data_len;
+      msg.data = data;
+      callbacks[callback_assignments[i].callback_id].fkt(msg, callbacks[callback_assignments[i].callback_id].arg);
 #if ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS
       continue;
 #else
