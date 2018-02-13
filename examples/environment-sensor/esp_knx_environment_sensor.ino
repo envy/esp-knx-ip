@@ -104,37 +104,37 @@ bool show_periodic_options()
   return knx.config_get_bool(enable_sending_id);
 }
 
-void temp_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void temp_cb(message_t const &msg, void *arg)
 {
-  switch (ct)
+  switch (msg.ct)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(received_on, bme.readTemperature());
+      knx.answer2ByteFloat(msg.received_on, bme.readTemperature());
       break;
     }
   }
 }
 
-void hum_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void hum_cb(message_t const &msg, void *arg)
 {
-  switch (ct)
+  switch (msg.ct)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(received_on, bme.readHumidity());
+      knx.answer2ByteFloat(msg.received_on, bme.readHumidity());
       break;
     }
   }
 }
 
-void pres_cb(knx_command_type_t ct, address_t const &received_on, uint8_t data_len, uint8_t *data)
+void pres_cb(message_t const &msg, void *arg)
 {
-  switch (ct)
+  switch (msg.ct)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(received_on, bme.readPressure()/100.0f);
+      knx.answer2ByteFloat(msg.received_on, bme.readPressure()/100.0f);
       break;
     }
   }
