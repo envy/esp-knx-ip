@@ -14,10 +14,12 @@
  * Required EEPROM size is 8 + MAX_GA_CALLBACKS * 3 + 2 + MAX_CONFIG_SPACE which is 552 by default
  */
 #define EEPROM_SIZE               1024 // [Default 1024]
-#define MAX_CALLBACK_ASSIGNMENTS  10 // [Default 10] Maximum number of group address callbacks that can be stored (Default 10)
-#define MAX_CALLBACKS             10 // [Default 10] Maximum number of callbacks that can be stored (Default 10)
-#define MAX_CONFIGS               20 // [Default 20] Maximum number of config items that can be stored (Default 20)
-#define MAX_CONFIG_SPACE          0x0200 // [Default 0x0200] Maximum number of bytes that can be stored for custom config (Default: 512)
+#define MAX_CALLBACK_ASSIGNMENTS  10 // [Default 10] Maximum number of group address callbacks that can be stored
+#define MAX_CALLBACKS             10 // [Default 10] Maximum number of callbacks that can be stored
+#define MAX_CONFIGS               20 // [Default 20] Maximum number of config items that can be stored
+#define MAX_CONFIG_SPACE          0x0200 // [Default 0x0200] Maximum number of bytes that can be stored for custom config
+
+#define MAX_FEEDBACKS             20 // [Default 20] Maximum number of feedbacks that can be shown
 
 // Callbacks
 #define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  0 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
@@ -67,7 +69,7 @@
 #define __EEPROM_PATH     ROOT_PREFIX"/eeprom"
 #define __CONFIG_PATH     ROOT_PREFIX"/config"
 #define __RESTORE_PATH    ROOT_PREFIX"/restore"
-#define __REBOOT_PATH    ROOT_PREFIX"/reboot"
+#define __REBOOT_PATH     ROOT_PREFIX"/reboot"
 
 /**
  * Different service types, we are mainly interested in KNX_ST_ROUTING_INDICATION
@@ -248,6 +250,14 @@ typedef enum __config_type
   CONFIG_TYPE_GA,
 } config_type_t;
 
+typedef enum __feedback_type
+{
+  FEEDBACK_TYPE_UNKNOWN,
+  FEEDBACK_TYPE_INT,
+  FEEDBACK_TYPE_FLOAT,
+  FEEDBACK_TYPE_BOOL,
+} feedback_type_t;
+
 typedef enum __config_flags
 {
   CONFIG_FLAGS_NO_FLAGS = 0,
@@ -268,6 +278,7 @@ typedef void (*callback_fptr_t)(message_t const &msg, void *arg);
 typedef uint8_t callback_id_t;
 typedef uint8_t callback_assignment_id_t;
 typedef uint8_t config_id_t;
+typedef uint8_t feedback_id_t;
 
 typedef struct __option_entry
 {
@@ -286,6 +297,22 @@ typedef struct __config
     option_entry_t *options;
   } data;
 } config_t;
+
+typedef struct __feedback_float_options
+{
+  uint8_t precision;
+} feedback_float_options_t;
+
+typedef struct __feedback
+{
+  feedback_type_t type;
+  String name;
+  enable_condition_t cond;
+  void *data;
+  union {
+    feedback_float_options_t float_options;
+  } options;
+} feedback_t;
 
 typedef struct __callback
 {
@@ -332,6 +359,10 @@ class ESPKNXIP {
     void          config_set_bool(config_id_t, bool val);
     void          config_set_options(config_id_t id, uint8_t val);
     void          config_set_ga(config_id_t id, address_t val);
+
+    // Feedback functions
+    feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
+    feedback_id_t feedback_register_float(String name, float *value, enable_condition_t cond = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
@@ -433,6 +464,9 @@ class ESPKNXIP {
     uint8_t custom_config_data[MAX_CONFIG_SPACE];
     uint8_t custom_config_default_data[MAX_CONFIG_SPACE];
     config_t custom_configs[MAX_CONFIGS];
+
+    feedback_id_t registered_feedbacks;
+    feedback_t feedbacks[MAX_FEEDBACKS];
 
     uint16_t ntohs(uint16_t);
 };

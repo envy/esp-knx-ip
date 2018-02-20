@@ -15,6 +15,39 @@ void ESPKNXIP::__handle_root()
 #endif
   m += F("</head><body><div class='container-fluid'>");
   m += F("<h2>ESP KNX</h2>");
+
+  // Feedback
+
+  if (registered_feedbacks > 0)
+  {
+    m += F("<h4>Feedback</h4>");
+    for (feedback_id_t i = 0; i < registered_feedbacks; ++i)
+    {
+      if (feedbacks[i].cond && !feedbacks[i].cond())
+      {
+        continue;
+      }
+      m += F("<div class='row' style='margin-bottom:1em'><div class='col-auto'><div class='input-group'>");
+      m += F("<div class='input-group-prepend'><span class='input-group-text'>");
+      m += feedbacks[i].name;
+      m += F("</span></div>");
+      switch (feedbacks[i].type)
+      {
+        case FEEDBACK_TYPE_INT:
+          m += F("<span class='input-group-text'>");
+          m += String(*(int32_t *)feedbacks[i].data);
+          m += F("</span>");
+          break;
+        case FEEDBACK_TYPE_FLOAT:
+          m += F("<span class='input-group-text'>");
+          m += String(*(float *)feedbacks[i].data);
+          m += F("</span>");
+          break;
+      }
+      m += F("</div></div></div>");
+    }
+  }
+
   if (registered_callbacks > 0)
     m += F("<h4>Callbacks</h4>");
 
@@ -428,7 +461,7 @@ end:
   server->send(302);
 }
 
-ESPKNXIP::ESPKNXIP() : registered_callback_assignments(0), registered_callbacks(0), registered_configs(0)
+ESPKNXIP::ESPKNXIP() : registered_callback_assignments(0), registered_callbacks(0), registered_configs(0), registered_feedbacks(0)
 {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("ESPKNXIP starting up");
@@ -998,6 +1031,44 @@ address_t ESPKNXIP::config_get_ga(config_id_t id)
   t.bytes.low = custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 1];
 
   return t;
+}
+
+/**
+ * Feedback functions start here
+ */
+
+feedback_id_t ESPKNXIP::feedback_register_int(String name, int32_t *value, enable_condition_t cond)
+{
+  if (registered_feedbacks >= MAX_FEEDBACKS)
+    return -1;
+
+  feedback_id_t id = registered_feedbacks;
+
+  feedbacks[id].type = FEEDBACK_TYPE_INT;
+  feedbacks[id].name = name;
+  feedbacks[id].cond = cond;
+  feedbacks[id].data = (void *)value;
+
+  registered_feedbacks++;
+
+  return id;
+}
+
+feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, enable_condition_t cond)
+{
+  if (registered_feedbacks >= MAX_FEEDBACKS)
+    return -1;
+
+  feedback_id_t id = registered_feedbacks;
+
+  feedbacks[id].type = FEEDBACK_TYPE_FLOAT;
+  feedbacks[id].name = name;
+  feedbacks[id].cond = cond;
+  feedbacks[id].data = (void *)value;
+
+  registered_feedbacks++;
+
+  return id;
 }
 
 /**
