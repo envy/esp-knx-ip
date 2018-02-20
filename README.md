@@ -7,6 +7,8 @@ It is intended to be used with the Arduino platform for the ESP8266.
 
 The library is under development. API may change multiple times in the future.
 
+API documentation is available [here](https://github.com/envy/esp-knx-ip/wiki/API)
+
 A simple example:
 
 ```c++
