@@ -23,6 +23,8 @@ config_set_string	KEYWORD2
 config_set_int	KEYWORD2
 config_set_ga	KEYWORD2
 config_set_bool	KEYWORD2
+feedback_register_int	KEYWORD2
+feedback_register_float	KEYWORD2
 send1Bit	KEYWORD2
 send2Bit	KEYWORD2
 send4Bit	KEYWORD2
