@@ -362,7 +362,7 @@ class ESPKNXIP {
 
     // Feedback functions
     feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_float(String name, float *value, enable_condition_t cond = nullptr);
+    feedback_id_t feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);

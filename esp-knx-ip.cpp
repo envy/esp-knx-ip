@@ -40,7 +40,7 @@ void ESPKNXIP::__handle_root()
           break;
         case FEEDBACK_TYPE_FLOAT:
           m += F("<span class='input-group-text'>");
-          m += String(*(float *)feedbacks[i].data);
+          m += String(*(float *)feedbacks[i].data, feedbacks[i].options.float_options.precision);
           m += F("</span>");
           break;
       }
@@ -90,7 +90,7 @@ void ESPKNXIP::__handle_root()
     m += F("<input class='form-control' type='number' name='member' min='0' max='255'/>");
     m += F("<div class='input-group-insert'><span class='input-group-text'>-&gt;</span></div>");
     m += F("<select class='form-control' name='cb'>");
-    for (uint8_t i = 0; i < registered_callbacks; ++i)
+    for (callback_id_t i = 0; i < registered_callbacks; ++i)
     {
       if (callbacks[i].cond && !callbacks[i].cond())
       {
@@ -1054,7 +1054,7 @@ feedback_id_t ESPKNXIP::feedback_register_int(String name, int32_t *value, enabl
   return id;
 }
 
-feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, enable_condition_t cond)
+feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8_t precision, enable_condition_t cond)
 {
   if (registered_feedbacks >= MAX_FEEDBACKS)
     return -1;
@@ -1065,6 +1065,7 @@ feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, enabl
   feedbacks[id].name = name;
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
+  feedbacks[id].options.float_options.precision = precision;
 
   registered_feedbacks++;
 
