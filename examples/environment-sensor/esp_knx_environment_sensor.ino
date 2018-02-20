@@ -11,14 +11,19 @@ const char* ssid = "myssid";
 const char* pass = "mypassword";
 
 #define LED_PIN D4
-#define UPDATE_INTERVAL 10000 // This is the default send interval
+#define UPDATE_INTERVAL 10000
 
 unsigned long next_change = 0;
 
+float last_temp = 0.0;
+float last_hum = 0.0;
+float last_pres = 0.0;
+
 config_id_t temp_ga, hum_ga, pres_ga;
 config_id_t hostname_id;
-config_id_t temp_rate_id;
+config_id_t update_rate_id, send_rate_id;
 config_id_t enable_sending_id;
+config_id_t enable_reading_id;
 
 Adafruit_BME280 bme;
 
@@ -26,10 +31,9 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(115200);
 
-  // Register the group addresses where to send information to and the other config
   hostname_id = knx.config_register_string("Hostname", 20, String("env"));
-  enable_sending_id = knx.config_register_bool("Enable periodic sending", true);
-  temp_rate_id = knx.config_register_int("Send rate (ms)", UPDATE_INTERVAL, show_periodic_options);
+  enable_sending_id = knx.config_register_bool("Send on update", true);
+  update_rate_id = knx.config_register_int("Update rate (ms)", UPDATE_INTERVAL);
   temp_ga = knx.config_register_ga("Temperature", show_periodic_options);
   hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
   pres_ga = knx.config_register_ga("Pressure", show_periodic_options);
@@ -38,7 +42,11 @@ void setup() {
   knx.register_callback("Read Humidity", hum_cb);
   knx.register_callback("Read Pressure", pres_cb);
 
-  // Load previous values from EEPROM
+  knx.feedback_register_float("Temperature (°C)", &last_temp);
+  knx.feedback_register_float("Humidity (%)", &last_hum);
+  knx.feedback_register_float("Pressure (hPa)", &last_pres, 0);
+
+  // Load previous config from EEPROM
   knx.load();
 
   // Init sensor
@@ -57,9 +65,10 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
   while (WiFi.status() != WL_CONNECTED) {
     digitalWrite(LED_PIN, HIGH);
-    delay(500);
+    delay(250);
     Serial.print(".");
     digitalWrite(LED_PIN, LOW);
+    delay(250);
   }
   digitalWrite(LED_PIN, HIGH);
 
@@ -72,36 +81,45 @@ void setup() {
 }
 
 void loop() {
-  // Process knx events, e.g. webserver
   knx.loop();
   
   unsigned long now = millis();
 
-  if (knx.config_get_bool(enable_sending_id) && next_change < now)
+  if (next_change < now)
   {
-    next_change = now + knx.config_get_int(temp_rate_id);
+    next_change = now + knx.config_get_int(update_rate_id);
+
+    last_temp = bme.readTemperature();
+    last_hum = bme.readHumidity();
+    last_pres = bme.readPressure()/100.0f;
+
     Serial.print("T: ");
-    float temp = bme.readTemperature();
-    float hum = bme.readHumidity();
-    float pres = bme.readPressure()/100.0f;
-    Serial.print(temp);
+    Serial.print(last_temp);
     Serial.print("°C H: ");
-    Serial.print(hum);
+    Serial.print(last_hum);
     Serial.print("% P: ");
-    Serial.print(pres);
+    Serial.print(last_pres);
     Serial.println("hPa");
-    knx.write2ByteFloat(knx.config_get_ga(temp_ga), temp);
-    knx.write2ByteFloat(knx.config_get_ga(hum_ga), hum);
-    knx.write2ByteFloat(knx.config_get_ga(pres_ga), pres);
+
+    if (knx.config_get_bool(enable_sending_id))
+    {
+      knx.write2ByteFloat(knx.config_get_ga(temp_ga), last_temp);
+      knx.write2ByteFloat(knx.config_get_ga(hum_ga), last_hum);
+      knx.write2ByteFloat(knx.config_get_ga(pres_ga), last_pres);
+    }
   }
 
   delay(50);
 }
 
-// This is a enable condition function that is checked by the webui to figure out if some config options should be hidden
 bool show_periodic_options()
 {
   return knx.config_get_bool(enable_sending_id);
+}
+
+bool enable_reading_callback()
+{
+  return knx.config_get_bool(enable_reading_id);
 }
 
 void temp_cb(message_t const &msg, void *arg)
@@ -110,7 +128,7 @@ void temp_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, bme.readTemperature());
+      knx.answer2ByteFloat(msg.received_on, last_temp);
       break;
     }
   }
@@ -122,7 +140,7 @@ void hum_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, bme.readHumidity());
+      knx.answer2ByteFloat(msg.received_on, last_hum);
       break;
     }
   }
@@ -134,7 +152,7 @@ void pres_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, bme.readPressure()/100.0f);
+      knx.answer2ByteFloat(msg.received_on, last_pres);
       break;
     }
   }
