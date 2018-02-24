@@ -42,15 +42,17 @@ config_id_t type_id;
 typedef struct __sonoff_channel
 {
   int pin;
+  int btn_pin;
   config_id_t status_ga_id;
   bool state;
+  bool last_btn_state;
 } sonoff_channel_t;
 
 sonoff_channel_t channels[] = {
-  {CH1_PIN, 0, false},
-  {CH2_PIN, 0, false},
-  {CH3_PIN, 0, false},
-  {CH4_PIN, 0, false},
+  {CH1_PIN, BTN1_PIN, 0, false, false},
+  {CH2_PIN, BTN2_PIN, 0, false, false},
+  {CH3_PIN, BTN3_PIN, 0, false, false},
+  {CH4_PIN, BTN4_PIN, 0, false, false},
 };
 
 void setup()
@@ -110,6 +112,16 @@ void setup()
 void loop()
 {
   knx.loop();
+
+  // Check local buttons
+  check_button(&channels[0]);
+  if (is_4ch_or_4ch_pro())
+  {
+    check_button(&channels[1]);
+    check_button(&channels[2]);
+    check_button(&channels[3]);
+  }
+
   delay(50);
 }
 
@@ -123,6 +135,18 @@ bool is_4ch_or_4ch_pro()
 {
   uint8_t type = knx.config_get_options(type_id);
   return type == SONOFF_TYPE_4CH ||type == SONOFF_TYPE_4CH_PRO;
+}
+
+void check_button(sonoff_channel_t *chan)
+{
+  bool state_now = digitalRead(chan->btn_pin) == HIGH ? true : false;
+  if (state_now != chan->last_btn_state && state_now == LOW)
+  {
+    chan->state = !chan->state;
+    digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+    knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+  }
+  chan->last_btn_state = state_now;
 }
 
 void channel_cb(message_t const &msg, void *arg)
