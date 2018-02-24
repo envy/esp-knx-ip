@@ -68,6 +68,7 @@
 #define __PHYS_PATH       ROOT_PREFIX"/phys"
 #define __EEPROM_PATH     ROOT_PREFIX"/eeprom"
 #define __CONFIG_PATH     ROOT_PREFIX"/config"
+#define __FEEDBACK_PATH   ROOT_PREFIX"/feedback"
 #define __RESTORE_PATH    ROOT_PREFIX"/restore"
 #define __REBOOT_PATH     ROOT_PREFIX"/reboot"
 
@@ -256,6 +257,7 @@ typedef enum __feedback_type
   FEEDBACK_TYPE_INT,
   FEEDBACK_TYPE_FLOAT,
   FEEDBACK_TYPE_BOOL,
+  FEEDBACK_TYPE_ACTION,
 } feedback_type_t;
 
 typedef enum __config_flags
@@ -274,6 +276,7 @@ typedef struct __message
 
 typedef bool (*enable_condition_t)(void);
 typedef void (*callback_fptr_t)(message_t const &msg, void *arg);
+typedef void (*feedback_action_fptr_t)(void *arg);
 
 typedef uint8_t callback_id_t;
 typedef uint8_t callback_assignment_id_t;
@@ -303,6 +306,11 @@ typedef struct __feedback_float_options
   uint8_t precision;
 } feedback_float_options_t;
 
+typedef struct __feedback_action_options
+{
+  void * arg;
+} feedback_action_options_t;
+
 typedef struct __feedback
 {
   feedback_type_t type;
@@ -311,6 +319,7 @@ typedef struct __feedback
   void *data;
   union {
     feedback_float_options_t float_options;
+    feedback_action_options_t action_options;
   } options;
 } feedback_t;
 
@@ -363,6 +372,8 @@ class ESPKNXIP {
     // Feedback functions
     feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
     feedback_id_t feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
+    feedback_id_t feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
+    feedback_id_t feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
@@ -436,6 +447,7 @@ class ESPKNXIP {
     void __handle_set();
     void __handle_eeprom();
     void __handle_config();
+    void __handle_feedback();
     void __handle_restore();
     void __handle_reboot();
 

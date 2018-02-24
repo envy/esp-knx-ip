@@ -27,7 +27,8 @@ void ESPKNXIP::__handle_root()
       {
         continue;
       }
-      m += F("<div class='row' style='margin-bottom:1em'><div class='col-auto'><div class='input-group'>");
+      m += F("<form action='" __FEEDBACK_PATH "' method='POST'>");
+      m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<div class='input-group-prepend'><span class='input-group-text'>");
       m += feedbacks[i].name;
       m += F("</span></div>");
@@ -43,8 +44,19 @@ void ESPKNXIP::__handle_root()
           m += String(*(float *)feedbacks[i].data, feedbacks[i].options.float_options.precision);
           m += F("</span>");
           break;
+        case FEEDBACK_TYPE_BOOL:
+          m += F("<span class='input-group-text'>");
+          m += (*(bool *)feedbacks[i].data) ? F("True") : F("False");
+          m += F("</span>");
+          break;
+        case FEEDBACK_TYPE_ACTION:
+          m += F("<input class='form-control' type='hidden' name='id' value='");
+          m += i;
+          m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-primary'>Do this</button></div>");
+          break;
       }
       m += F("</div></div></div>");
+      m += F("</form>");
     }
   }
 
@@ -415,6 +427,42 @@ end:
   server->send(302);
 }
 
+void ESPKNXIP::__handle_feedback()
+{
+DEBUG_PRINTLN(F("Feedback called"));
+  if (server->hasArg(F("id")))
+  {
+    config_id_t id = server->arg(F("id")).toInt();
+
+    DEBUG_PRINT(F("Got args: "));
+    DEBUG_PRINT(id);
+    DEBUG_PRINTLN(F(""));
+
+    if (id < 0 || id >= registered_feedbacks)
+    {
+      DEBUG_PRINTLN(F("ID wrong"));
+      goto end;
+    }
+
+    switch (feedbacks[id].type)
+    {
+      case FEEDBACK_TYPE_ACTION:
+      {
+        feedback_action_fptr_t func = (feedback_action_fptr_t)feedbacks[id].data;
+        void *arg = feedbacks[id].options.action_options.arg;
+        func(arg);
+        break;
+      }
+      default:
+        DEBUG_PRINTLN(F("Feedback has no action"));
+        break;
+    }
+  }
+end:
+  server->sendHeader(F("Location"),F(__ROOT_PATH));
+  server->send(302);
+}
+
 void ESPKNXIP::__handle_restore()
 {
   DEBUG_PRINTLN(F("Restore called"));
@@ -520,6 +568,9 @@ void ESPKNXIP::__start()
   });
   server->on(__CONFIG_PATH, [this](){
     __handle_config();
+  });
+  server->on(__FEEDBACK_PATH, [this](){
+    __handle_feedback();
   });
   server->on(__RESTORE_PATH, [this](){
     __handle_restore();
@@ -1066,6 +1117,41 @@ feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.float_options.precision = precision;
+
+  registered_feedbacks++;
+
+  return id;
+}
+
+feedback_id_t ESPKNXIP::feedback_register_bool(String name, bool *value, enable_condition_t cond)
+{
+  if (registered_feedbacks >= MAX_FEEDBACKS)
+    return -1;
+
+  feedback_id_t id = registered_feedbacks;
+
+  feedbacks[id].type = FEEDBACK_TYPE_BOOL;
+  feedbacks[id].name = name;
+  feedbacks[id].cond = cond;
+  feedbacks[id].data = (void *)value;
+
+  registered_feedbacks++;
+
+  return id;
+}
+
+feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fptr_t value, void *arg, enable_condition_t cond)
+{
+  if (registered_feedbacks >= MAX_FEEDBACKS)
+    return -1;
+
+  feedback_id_t id = registered_feedbacks;
+
+  feedbacks[id].type = FEEDBACK_TYPE_ACTION;
+  feedbacks[id].name = name;
+  feedbacks[id].cond = cond;
+  feedbacks[id].data = (void *)value;
+  feedbacks[id].options.action_options.arg = arg;
 
   registered_feedbacks++;
 
