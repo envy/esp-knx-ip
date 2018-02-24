@@ -82,6 +82,15 @@ void setup()
   knx.register_callback("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
   knx.register_callback("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
 
+  knx.feedback_register_bool("Channel 1 is on", &(channels[0].state));
+  knx.feedback_register_action("Toogle channel 1", toggle_chan, &channels[0]);
+  knx.feedback_register_bool("Channel 2 is on", &(channels[1].state), is_4ch_or_4ch_pro);
+  knx.feedback_register_action("Toogle channel 2", toggle_chan, &channels[1], is_4ch_or_4ch_pro);
+  knx.feedback_register_bool("Channel 3 is on", &(channels[2].state), is_4ch_or_4ch_pro);
+  knx.feedback_register_action("Toogle channel 3", toggle_chan, &channels[2], is_4ch_or_4ch_pro);
+  knx.feedback_register_bool("Channel 4 is on", &(channels[3].state), is_4ch_or_4ch_pro);
+  knx.feedback_register_action("Toogle channel 4", toggle_chan, &channels[3], is_4ch_or_4ch_pro);
+
   knx.load();
 
   // Init WiFi
@@ -147,6 +156,14 @@ void check_button(sonoff_channel_t *chan)
     knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
   }
   chan->last_btn_state = state_now;
+}
+
+void toggle_chan(void *arg)
+{
+  sonoff_channel_t *chan = (sonoff_channel_t *)arg;
+  chan->state = !chan->state;
+  digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+  knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
 }
 
 void channel_cb(message_t const &msg, void *arg)
