@@ -174,18 +174,25 @@ uint16_t ESPKNXIP::ntohs(uint16_t n)
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));
 }
 
-callback_assignment_id_t ESPKNXIP::__callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb)
+callback_assignment_id_t ESPKNXIP::__callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t id)
+{
+  address_t temp;
+  temp.bytes.high = (area << 3) | line;
+  temp.bytes.low = member;
+  return __callback_register_assignment(temp, id);
+}
+
+callback_assignment_id_t ESPKNXIP::__callback_register_assignment(address_t address, callback_id_t id)
 {
   if (registered_callback_assignments >= MAX_CALLBACK_ASSIGNMENTS)
     return -1;
 
-  callback_assignment_id_t id = registered_callback_assignments;
+  callback_assignment_id_t aid = registered_callback_assignments;
 
-  callback_assignments[id].address.bytes.high = (area << 3) | line;
-  callback_assignments[id].address.bytes.low = member;
-  callback_assignments[id].callback_id = cb;
+  callback_assignments[aid].address = address;
+  callback_assignments[aid].callback_id = id;
   registered_callback_assignments++;
-  return id;
+  return aid;
 }
 
 void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
@@ -241,6 +248,14 @@ callback_id_t ESPKNXIP::callback_register(String name, callback_fptr_t cb, void 
   callbacks[id].arg = arg;
   registered_callbacks++;
   return id;
+}
+
+void ESPKNXIP::callback_assign(callback_id_t id, address_t val)
+{
+  if (id >= registered_callbacks)
+    return;
+
+  __callback_register_assignment(val, id);
 }
 
 /**

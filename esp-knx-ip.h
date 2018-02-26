@@ -349,6 +349,7 @@ class ESPKNXIP {
     void restore_from_eeprom();
 
     callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
+    void          callback_assign(callback_id_t id, address_t val);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
@@ -459,7 +460,8 @@ class ESPKNXIP {
     void __config_set_options(config_id_t id, uint8_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
-    callback_assignment_id_t __callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t cb);
+    callback_assignment_id_t __callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t id);
+    callback_assignment_id_t __callback_register_assignment(address_t address, callback_id_t id);
     void __callback_delete_assignment(callback_assignment_id_t id);
 
     ESP8266WebServer *server;

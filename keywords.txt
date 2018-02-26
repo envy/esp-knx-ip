@@ -11,6 +11,7 @@ knx_command_type_t	DATA_TYPE
 setup	KEYWORD2
 loop	KEYWORD2
 callback_register	KEYWORD2
+callback_assign	KEYWORD2
 config_register_string	KEYWORD2
 config_register_int	KEYWORD2
 config_register_ga	KEYWORD2
