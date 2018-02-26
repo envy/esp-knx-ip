@@ -10,7 +10,7 @@ knx_command_type_t	DATA_TYPE
 # methods
 setup	KEYWORD2
 loop	KEYWORD2
-register_callback	KEYWORD2
+callback_register	KEYWORD2
 config_register_string	KEYWORD2
 config_register_int	KEYWORD2
 config_register_ga	KEYWORD2

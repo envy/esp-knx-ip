@@ -348,7 +348,7 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t register_callback(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
+    callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);

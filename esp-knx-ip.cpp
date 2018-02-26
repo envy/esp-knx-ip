@@ -228,7 +228,7 @@ void ESPKNXIP::__callback_delete_assignment(callback_assignment_id_t id)
   registered_callback_assignments--;
 }
 
-callback_id_t ESPKNXIP::register_callback(String name, callback_fptr_t cb, void *arg, enable_condition_t cond)
+callback_id_t ESPKNXIP::callback_register(String name, callback_fptr_t cb, void *arg, enable_condition_t cond)
 {
   if (registered_callbacks >= MAX_CALLBACKS)
     return -1;

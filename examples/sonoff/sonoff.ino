@@ -77,10 +77,10 @@ void setup()
   channels[2].status_ga_id = knx.config_register_ga("Channel 3 Status GA", is_4ch_or_4ch_pro);
   channels[3].status_ga_id = knx.config_register_ga("Channel 4 Status GA", is_4ch_or_4ch_pro);
 
-  knx.register_callback("Channel 1", channel_cb, &channels[0]);
-  knx.register_callback("Channel 2", channel_cb, &channels[1], is_4ch_or_4ch_pro);
-  knx.register_callback("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
-  knx.register_callback("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
+  knx.callback_register("Channel 1", channel_cb, &channels[0]);
+  knx.callback_register("Channel 2", channel_cb, &channels[1], is_4ch_or_4ch_pro);
+  knx.callback_register("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
+  knx.callback_register("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
 
   knx.feedback_register_bool("Channel 1 is on", &(channels[0].state));
   knx.feedback_register_action("Toogle channel 1", toggle_chan, &channels[0]);

@@ -38,9 +38,9 @@ void setup() {
   hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
   pres_ga = knx.config_register_ga("Pressure", show_periodic_options);
 
-  knx.register_callback("Read Temperature", temp_cb);
-  knx.register_callback("Read Humidity", hum_cb);
-  knx.register_callback("Read Pressure", pres_cb);
+  knx.callback_register("Read Temperature", temp_cb);
+  knx.callback_register("Read Humidity", hum_cb);
+  knx.callback_register("Read Pressure", pres_cb);
 
   knx.feedback_register_float("Temperature (°C)", &last_temp);
   knx.feedback_register_float("Humidity (%)", &last_hum);
