@@ -6,7 +6,7 @@
 
 #include "esp-knx-ip.h"
 
-ESPKNXIP::ESPKNXIP() : registered_callback_assignments(0), registered_callbacks(0), registered_configs(0), registered_feedbacks(0)
+ESPKNXIP::ESPKNXIP() : server(nullptr), registered_callback_assignments(0), registered_callbacks(0), registered_configs(0), registered_feedbacks(0)
 {
   DEBUG_PRINTLN();
   DEBUG_PRINTLN("ESPKNXIP starting up");
@@ -29,10 +29,6 @@ void ESPKNXIP::load()
 
 void ESPKNXIP::start(ESP8266WebServer *srv)
 {
-  if (srv == nullptr)
-  {
-    return;
-  }
   server = srv;
   __start();
 }
@@ -45,37 +41,40 @@ void ESPKNXIP::start()
 
 void ESPKNXIP::__start()
 {
-  server->on(ROOT_PREFIX, [this](){
-    __handle_root();
-  });
-  server->on(__ROOT_PATH, [this](){
-    __handle_root();
-  });
-  server->on(__REGISTER_PATH, [this](){
-    __handle_register();
-  });
-  server->on(__DELETE_PATH, [this](){
-    __handle_delete();
-  });
-  server->on(__PHYS_PATH, [this](){
-    __handle_set();
-  });
-  server->on(__EEPROM_PATH, [this](){
-    __handle_eeprom();
-  });
-  server->on(__CONFIG_PATH, [this](){
-    __handle_config();
-  });
-  server->on(__FEEDBACK_PATH, [this](){
-    __handle_feedback();
-  });
-  server->on(__RESTORE_PATH, [this](){
-    __handle_restore();
-  });
-  server->on(__REBOOT_PATH, [this](){
-    __handle_reboot();
-  });
-  server->begin();
+  if (server != nullptr)
+  {
+    server->on(ROOT_PREFIX, [this](){
+      __handle_root();
+    });
+    server->on(__ROOT_PATH, [this](){
+      __handle_root();
+    });
+    server->on(__REGISTER_PATH, [this](){
+      __handle_register();
+    });
+    server->on(__DELETE_PATH, [this](){
+      __handle_delete();
+    });
+    server->on(__PHYS_PATH, [this](){
+      __handle_set();
+    });
+    server->on(__EEPROM_PATH, [this](){
+      __handle_eeprom();
+    });
+    server->on(__CONFIG_PATH, [this](){
+      __handle_config();
+    });
+    server->on(__FEEDBACK_PATH, [this](){
+      __handle_feedback();
+    });
+    server->on(__RESTORE_PATH, [this](){
+      __handle_restore();
+    });
+    server->on(__REBOOT_PATH, [this](){
+      __handle_reboot();
+    });
+    server->begin();
+  }
 
   udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
 }
@@ -507,7 +506,10 @@ float ESPKNXIP::data_to_4byte_float(uint8_t *data)
 void ESPKNXIP::loop()
 {
   __loop_knx();
-  __loop_webserver();
+  if (server != nullptr)
+  {
+    __loop_webserver();
+  }
 }
 
 void ESPKNXIP::__loop_webserver()
