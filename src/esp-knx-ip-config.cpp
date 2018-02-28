@@ -286,6 +286,19 @@ void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
   __config_set_ga(id, val);
 }
 
+void ESPKNXIP::config_set_ga(config_id_t id, uint8_t area, uint8_t line, uint8_t member)
+{
+  if (id >= registered_configs)
+    return;
+  if (custom_configs[id].type != CONFIG_TYPE_GA)
+    return;
+  if ( area > 15 ) return;
+  if ( line > 15 ) return;
+  if ( member > 255 ) return;
+  __config_set_flags(id, CONFIG_FLAGS_VALUE_SET);
+  __config_set_ga(id, GA_to_address(area, line, member));
+}
+
 void ESPKNXIP::__config_set_ga(config_id_t id, address_t const &val)
 {
   custom_config_data[custom_configs[id].offset + sizeof(uint8_t) + 0] = val.bytes.high;
