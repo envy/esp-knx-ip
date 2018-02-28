@@ -1,11 +1,25 @@
-#include <esp-knx-ip.h>
+/*
+ * This is an example showing a simple environment sensor based on a DHT11 attached to a Sonoff
+ * and KNX Configuration set by code.
+ */
+#include <esp-knx-ip.h> // Include KNX library
+#include <DHT.h>
 
 // WiFi config here
 const char* ssid = "ssid";
 const char* pass = "pass";
 
+#define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+
 // Common
-#define LED_PIN 13
+#define LED_PIN 2 // 13 on Sonoff, 2 on NodeMCU
+#define UPDATE_INTERVAL 10000
+#define DHTTYPE DHT11
+#define DHTPIN  14 // Check connection Pin (14 is for Sonoff Basic)
+unsigned long next_change = 0;
+
+float last_temp = 0.0;
+float last_hum = 0.0;
 
 // For Basic and S20
 #define BTN1_PIN 0
@@ -38,6 +52,12 @@ option_entry_t type_options[] = {
 
 config_id_t hostname_id;
 config_id_t type_id;
+callback_id_t callback_id;
+config_id_t temp_ga, hum_ga;
+config_id_t update_rate_id;
+config_id_t enable_sending_id;
+
+DHT dht(DHTPIN, DHTTYPE);
 
 typedef struct __sonoff_channel
 {
@@ -69,19 +89,35 @@ void setup()
   Serial.begin(115200);
 
   // Register the config options
-  hostname_id = knx.config_register_string("Hostname", 20, String("sonoff"));
+  hostname_id = knx.config_register_string("Hostname", 20, String("sonoff_DHT11"));
   type_id = knx.config_register_options("Type", type_options, SONOFF_TYPE_BASIC);
-  
+  enable_sending_id = knx.config_register_bool("Send on update", true);
+  update_rate_id = knx.config_register_int("Update rate (ms)", UPDATE_INTERVAL);
+
+  // Set Physical KNX Address of ESP KNX
+  knx.config_set_physical_addr(1,1,1);
+
+  // Register and Set Group Addresses to Write to
   channels[0].status_ga_id = knx.config_register_ga("Channel 1 Status GA");
+  knx.config_set_ga(channels[0].status_ga_id,2,2,1);
   channels[1].status_ga_id = knx.config_register_ga("Channel 2 Status GA", is_4ch_or_4ch_pro);
   channels[2].status_ga_id = knx.config_register_ga("Channel 3 Status GA", is_4ch_or_4ch_pro);
   channels[3].status_ga_id = knx.config_register_ga("Channel 4 Status GA", is_4ch_or_4ch_pro);
+  temp_ga = knx.config_register_ga("Temperature", show_periodic_options);
+  knx.config_set_ga(temp_ga,4,1,1);
+  hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
+  knx.config_set_ga(hum_ga,4,1,2);
 
-  knx.callback_register("Channel 1", channel_cb, &channels[0]);
+  // Register and set Group Addresses to Receive data from and execute callbacks
+  callback_id = knx.callback_register("Channel 1", channel_cb, &channels[0]);
+  knx.callback_assign(callback_id,2,2,1);
   knx.callback_register("Channel 2", channel_cb, &channels[1], is_4ch_or_4ch_pro);
   knx.callback_register("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
   knx.callback_register("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
+  knx.callback_register("Read Temperature", temp_cb);
+  knx.callback_register("Read Humidity", hum_cb);
 
+  // Register data to be shown on the webserver
   knx.feedback_register_bool("Channel 1 is on", &(channels[0].state));
   knx.feedback_register_action("Toogle channel 1", toggle_chan, &channels[0]);
   knx.feedback_register_bool("Channel 2 is on", &(channels[1].state), is_4ch_or_4ch_pro);
@@ -90,8 +126,14 @@ void setup()
   knx.feedback_register_action("Toogle channel 3", toggle_chan, &channels[2], is_4ch_or_4ch_pro);
   knx.feedback_register_bool("Channel 4 is on", &(channels[3].state), is_4ch_or_4ch_pro);
   knx.feedback_register_action("Toogle channel 4", toggle_chan, &channels[3], is_4ch_or_4ch_pro);
+  knx.feedback_register_float("Temperature (°C)", &last_temp);
+  knx.feedback_register_float("Humidity (%)", &last_hum);
 
-  knx.load();
+  // Load previous values from EEPROM
+  knx.load(); // Comment if you don't want to use EEPROM
+
+  // Init sensor
+  dht.begin();
 
   // Init WiFi
   WiFi.hostname(knx.config_get_string(hostname_id));
@@ -111,7 +153,11 @@ void setup()
   digitalWrite(LED_PIN, HIGH);
 
   // Start knx
-  knx.start();
+  //knx.start(nullptr); // Start KNX WITHOUT webserver
+  knx.start(); // Start KNX with webserver
+  //knx.start(myserver); // Start KNX with a webserver already running on 'myserver'
+                     // On this case you might want to change ROOT_PREFIX to
+                     // #define ROOT_PREFIX   "/knx"
 
   Serial.println();
   Serial.println("Connected to wifi");
@@ -120,7 +166,36 @@ void setup()
 
 void loop()
 {
-  knx.loop();
+  knx.loop();  // Process knx events
+
+  unsigned long now = millis();
+
+  if (next_change < now)
+  {
+    next_change = now + knx.config_get_int(update_rate_id);
+
+    float last_temp = dht.readTemperature();
+    float last_hum = dht.readHumidity();
+    if ( isnan (last_temp) )
+    {
+        last_temp = -99.0;
+    }
+    if ( isnan(last_hum) )
+    {
+        last_hum = -99.0;
+    }
+    Serial.print("T: ");
+    Serial.print(last_temp);
+    Serial.print("°C  H: ");
+    Serial.print(last_hum);
+    Serial.println("%");
+
+    if (knx.config_get_bool(enable_sending_id))
+    {
+      knx.write2ByteFloat(knx.config_get_ga(temp_ga), last_temp);
+      knx.write2ByteFloat(knx.config_get_ga(hum_ga), last_hum);
+    }
+  }
 
   // Check local buttons
   check_button(&channels[0]);
@@ -153,6 +228,7 @@ void check_button(sonoff_channel_t *chan)
   {
     chan->state = !chan->state;
     digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+    digitalWrite(LED_PIN, chan->state ? LOW : HIGH);
     knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
   }
   chan->last_btn_state = state_now;
@@ -163,6 +239,7 @@ void toggle_chan(void *arg)
   sonoff_channel_t *chan = (sonoff_channel_t *)arg;
   chan->state = !chan->state;
   digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+  digitalWrite(LED_PIN, chan->state ? LOW : HIGH);
   knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
 }
 
@@ -175,9 +252,39 @@ void channel_cb(message_t const &msg, void *arg)
       chan->state = msg.data[0];
       Serial.println(chan->state ? "Toggle on" : "Toggle off");
       digitalWrite(chan->pin, chan->state ? HIGH : LOW);
+      digitalWrite(LED_PIN, chan->state ? LOW : HIGH);
       knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
       break;
      case KNX_CT_READ:
       knx.answer1Bit(msg.received_on, chan->state);
+  }
+}
+
+bool show_periodic_options()
+{
+  return knx.config_get_bool(enable_sending_id);
+}
+
+void temp_cb(message_t const &msg, void *arg)
+{
+  switch (msg.ct)
+  {
+    case KNX_CT_READ:
+    {
+      knx.answer2ByteFloat(msg.received_on, last_temp);
+      break;
+    }
+  }
+}
+
+void hum_cb(message_t const &msg, void *arg)
+{
+  switch (msg.ct)
+  {
+    case KNX_CT_READ:
+    {
+      knx.answer2ByteFloat(msg.received_on, last_hum);
+      break;
+    }
   }
 }
