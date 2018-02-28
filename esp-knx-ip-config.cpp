@@ -7,6 +7,20 @@
 #include "esp-knx-ip.h"
 
 /**
+ * Physical address functions
+ */
+
+void ESPKNXIP::physical_address_set(address_t const &addr)
+{
+  physaddr = addr;
+}
+
+address_t ESPKNXIP::physical_address_get()
+{
+  return physaddr;
+}
+
+/**
  * Configuration functions start here
  */
 config_id_t ESPKNXIP::config_register_string(String name, uint8_t len, String _default, enable_condition_t cond)
