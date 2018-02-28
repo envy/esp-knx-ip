@@ -26,7 +26,9 @@
 
 // Webserver related
 #define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
-#define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#ifndef ROOT_PREFIX
+  #define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#endif
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
@@ -350,6 +352,7 @@ class ESPKNXIP {
 
     callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
     void          callback_assign(callback_id_t id, address_t val);
+    void          callback_assign(callback_id_t id, uint8_t area, uint8_t line, uint8_t member);
 
     // Configuration functions
     config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
@@ -358,17 +361,21 @@ class ESPKNXIP {
     config_id_t   config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
     config_id_t   config_register_ga(String name, enable_condition_t cond = nullptr);
 
+
+    address_t     config_get_physical_addr(void);
     String        config_get_string(config_id_t id);
     int32_t       config_get_int(config_id_t id);
     bool          config_get_bool(config_id_t id);
     uint8_t       config_get_options(config_id_t id);
     address_t     config_get_ga(config_id_t id);
 
+    bool          config_set_physical_addr(uint8_t area, uint8_t line, uint8_t member);
     void          config_set_string(config_id_t id, String val);
     void          config_set_int(config_id_t id, int32_t val);
     void          config_set_bool(config_id_t, bool val);
     void          config_set_options(config_id_t id, uint8_t val);
     void          config_set_ga(config_id_t id, address_t val);
+    void          config_set_ga(config_id_t id, uint8_t area, uint8_t line, uint8_t member);
 
     // Feedback functions
     feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
@@ -436,6 +443,22 @@ class ESPKNXIP {
       tmp.bytes.low = member;
       return tmp;
     }
+
+    static uint8_t area_from_address(address_t addresstoconvert)
+    {
+      return ((addresstoconvert.bytes.high & 0xF8) >> 3);
+    }
+
+    static uint8_t line_from_address(address_t addresstoconvert)
+    {
+      return (addresstoconvert.bytes.high & 0x07);
+    }
+
+    static uint8_t member_from_address(address_t addresstoconvert)
+    {
+      return addresstoconvert.bytes.low;
+    }
+
   private:
     void __start();
     void __loop_knx();
