@@ -187,6 +187,18 @@ typedef union __address
     uint8_t high;
     uint8_t low;
   } bytes;
+  struct __attribute__((packed))
+  {
+    uint8_t line:3;
+    uint8_t area:5;
+    uint8_t member;
+  } ga;
+  struct __attribute__((packed))
+  {
+    uint8_t line:4;
+    uint8_t area:4;
+    uint8_t member;
+  } pa;
   uint8_t array[2];
 } address_t;
 
@@ -434,9 +446,8 @@ class ESPKNXIP {
 
     static address_t GA_to_address(uint8_t area, uint8_t line, uint8_t member)
     {
-      address_t tmp;
-      tmp.bytes.high = (area << 3) | line;
-      tmp.bytes.low = member;
+      // Yes, the order is correct, see the struct definition above
+      address_t tmp = {.ga={line, area, member}};
       return tmp;
     }
   private:
@@ -463,7 +474,6 @@ class ESPKNXIP {
     void __config_set_options(config_id_t id, uint8_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
-    callback_assignment_id_t __callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t id);
     callback_assignment_id_t __callback_register_assignment(address_t address, callback_id_t id);
     void __callback_delete_assignment(callback_assignment_id_t id);
 

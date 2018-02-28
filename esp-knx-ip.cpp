@@ -174,14 +174,6 @@ uint16_t ESPKNXIP::ntohs(uint16_t n)
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));
 }
 
-callback_assignment_id_t ESPKNXIP::__callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t id)
-{
-  address_t temp;
-  temp.bytes.high = (area << 3) | line;
-  temp.bytes.low = member;
-  return __callback_register_assignment(temp, id);
-}
-
 callback_assignment_id_t ESPKNXIP::__callback_register_assignment(address_t address, callback_id_t id)
 {
   if (registered_callback_assignments >= MAX_CALLBACK_ASSIGNMENTS)

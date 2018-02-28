@@ -71,14 +71,15 @@ void ESPKNXIP::__handle_root()
       {
         continue;
       }
+      address_t &addr = callback_assignments[i].address;
       m += F("<form action='" __DELETE_PATH "' method='POST'>");
       m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
       m += F("<div class='input-group-prepend'><span class='input-group-text'>");
-      m += String((callback_assignments[i].address.bytes.high & 0xF8) >> 3);
+      m += addr.ga.area;
       m += F("/");
-      m += String(callback_assignments[i].address.bytes.high & 0x07);
+      m += addr.ga.line;
       m += F("/");
-      m += String(callback_assignments[i].address.bytes.low);
+      m += addr.ga.member;
       m += F("</span>");
       m += F("<span class='input-group-text'>");
       m += callbacks[callback_assignments[i].callback_id].name;
@@ -127,15 +128,15 @@ void ESPKNXIP::__handle_root()
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
   m += F("<div class='input-group-prepend'><span class='input-group-text'>Physical address</span></div>");
   m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
-  m += String((physaddr.bytes.high & 0xF0) >> 4);
+  m += physaddr.pa.area;
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
   m += F("<input class='form-control' type='number' name='line' min='0' max='15' value='");
-  m += String(physaddr.bytes.high & 0x0F);
+  m += physaddr.pa.line;
   m += F("'/>");
   m += F("<div class='input-group-insert'><span class='input-group-text'>.</span></div>");
   m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
-  m += String(physaddr.bytes.low);
+  m += physaddr.pa.member;
   m += F("'/>");
   m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
   m += F("</div></div></div>");
@@ -204,15 +205,15 @@ void ESPKNXIP::__handle_root()
         case CONFIG_TYPE_GA:
           address_t a = config_get_ga(i);
           m += F("<input class='form-control' type='number' name='area' min='0' max='31' value='");
-          m += String((a.bytes.high & 0xF8) >> 3);
+          m += a.ga.area;
           m += F("'/>");
           m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
           m += F("<input class='form-control' type='number' name='line' min='0' max='7' value='");
-          m += String(a.bytes.high & 0x07);
+          m += a.ga.line;
           m += F("'/>");
           m += F("<div class='input-group-insert'><span class='input-group-text'>/</span></div>");
           m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
-          m += String(a.bytes.low);
+          m += a.ga.member;
           m += F("'/>");
           break;
       }
@@ -292,8 +293,8 @@ void ESPKNXIP::__handle_register()
       DEBUG_PRINTLN(F("Invalid callback id"));
       goto end;
     }
-
-    __callback_register_assignment(area, line, member, cb);
+    address_t ga = {.ga={line, area, member}};
+    __callback_register_assignment(ga, cb);
   }
 end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
