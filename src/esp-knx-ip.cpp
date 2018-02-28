@@ -138,7 +138,7 @@ void ESPKNXIP::restore_from_eeprom()
     address += sizeof(callback_id_t);
   }
   EEPROM.get(address, physaddr);
-  address += sizeof(address_t); 
+  address += sizeof(address_t);
 
   //EEPROM.get(address, custom_config_data);
   //address += sizeof(custom_config_data);
@@ -172,6 +172,21 @@ void ESPKNXIP::restore_from_eeprom()
 uint16_t ESPKNXIP::ntohs(uint16_t n)
 {
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));
+}
+
+bool ESPKNXIP::config_set_physical_addr(uint8_t area, uint8_t line, uint8_t member)
+{
+  if ( area > 15 ) return false;
+  if ( line > 15 ) return false;
+  if ( member > 255 ) return false;
+  physaddr.bytes.high = (area << 4) | line;
+  physaddr.bytes.low = member;
+  return true;
+}
+
+address_t ESPKNXIP::config_get_physical_addr(void)
+{
+  return physaddr;
 }
 
 callback_assignment_id_t ESPKNXIP::__callback_register_assignment(uint8_t area, uint8_t line, uint8_t member, callback_id_t id)
@@ -256,6 +271,14 @@ void ESPKNXIP::callback_assign(callback_id_t id, address_t val)
     return;
 
   __callback_register_assignment(val, id);
+}
+
+void ESPKNXIP::callback_assign(callback_id_t id, uint8_t area, uint8_t line, uint8_t member)
+{
+  if (id >= registered_callbacks)
+    return;
+
+  __callback_register_assignment(area, line, member, id);
 }
 
 /**
