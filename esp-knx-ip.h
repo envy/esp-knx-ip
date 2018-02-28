@@ -371,7 +371,7 @@ class ESPKNXIP {
     void          config_set_int(config_id_t id, int32_t val);
     void          config_set_bool(config_id_t, bool val);
     void          config_set_options(config_id_t id, uint8_t val);
-    void          config_set_ga(config_id_t id, address_t val);
+    void          config_set_ga(config_id_t id, address_t const &val);
 
     // Feedback functions
     feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);

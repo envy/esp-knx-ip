@@ -290,7 +290,7 @@ void ESPKNXIP::__config_set_options(config_id_t id, uint8_t val)
   custom_config_data[custom_configs[id].offset + sizeof(uint8_t)] = val;
 }
 
-void ESPKNXIP::config_set_ga(config_id_t id, address_t val)
+void ESPKNXIP::config_set_ga(config_id_t id, address_t const &val)
 {
   if (id >= registered_configs)
     return;
