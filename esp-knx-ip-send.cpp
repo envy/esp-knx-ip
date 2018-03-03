@@ -70,25 +70,25 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
   udp.endPacket();
 }
 
-void ESPKNXIP::send1Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
+void ESPKNXIP::send_1bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
 {
   uint8_t buf[] = {bit & 0b00000001};
   send(receiver, ct, 1, buf);
 }
 
-void ESPKNXIP::send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit)
+void ESPKNXIP::send_2bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit)
 {
   uint8_t buf[] = {twobit & 0b00000011};
   send(receiver, ct, 1, buf);
 }
 
-void ESPKNXIP::send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit)
+void ESPKNXIP::send_4bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit)
 {
   uint8_t buf[] = {fourbit & 0b00001111};
   send(receiver, ct, 1, buf);
 }
 
-void ESPKNXIP::send1ByteInt(address_t const &receiver, knx_command_type_t ct, int8_t val)
+void ESPKNXIP::send_1byte_int(address_t const &receiver, knx_command_type_t ct, int8_t val)
 {
   uint8_t buf[] = {0x00, (uint8_t)val};
   send(receiver, ct, 2, buf);
@@ -99,7 +99,7 @@ int8_t ESPKNXIP::data_to_1byte_int(uint8_t *data)
   return (int8_t)data[1];
 }
 
-void ESPKNXIP::send2ByteInt(address_t const &receiver, knx_command_type_t ct, int16_t val)
+void ESPKNXIP::send_2byte_int(address_t const &receiver, knx_command_type_t ct, int16_t val)
 {
   uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
   send(receiver, ct, 3, buf);
@@ -110,7 +110,7 @@ int16_t ESPKNXIP::data_to_2byte_int(uint8_t *data)
   return (int16_t)((data[1] << 8) | data[2]);
 }
 
-void ESPKNXIP::send2ByteFloat(address_t const &receiver, knx_command_type_t ct, float val)
+void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct, float val)
 {
   float v = val * 100.0f;
   int e = 0;
@@ -134,7 +134,7 @@ float ESPKNXIP::data_to_2byte_float(uint8_t *data)
   return 0.01f * mant * pow(2, expo);
 }
 
-void ESPKNXIP::send3ByteTime(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
+void ESPKNXIP::send_3byte_time(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
 {
   weekday <<= 5;
   uint8_t buf[] = {0x00, (((weekday << 5) & 0xE0) + (hours & 0x1F)), minutes & 0x3F, seconds & 0x3F};
@@ -151,7 +151,7 @@ time_of_day_t ESPKNXIP::data_to_3byte_time(uint8_t *data)
   return time;
 }
 
-void ESPKNXIP::send3ByteDate(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
+void ESPKNXIP::send_3byte_date(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
 {
   uint8_t buf[] = {0x00, day & 0x1F, month & 0x0F, year};
   send(receiver, ct, 4, buf);
@@ -166,7 +166,7 @@ date_t ESPKNXIP::data_to_3byte_data(uint8_t *data)
   return date;
 }
 
-void ESPKNXIP::send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
+void ESPKNXIP::send_3byte_color(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
 {
   uint8_t buf[] = {0x00, red, green, blue};
   send(receiver, ct, 4, buf);
@@ -181,7 +181,7 @@ color_t ESPKNXIP::data_to_3byte_color(uint8_t *data)
   return color;
 }
 
-void ESPKNXIP::send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val)
+void ESPKNXIP::send_4byte_float(address_t const &receiver, knx_command_type_t ct, float val)
 {
   uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
   send(receiver, ct, 5, buf);

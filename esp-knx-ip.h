@@ -394,47 +394,47 @@ class ESPKNXIP {
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
 
-    void send1Bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
-    void send2Bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit);
-    void send4Bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit);
-    void send1ByteInt(address_t const &receiver, knx_command_type_t ct, int8_t val);
-    void send2ByteInt(address_t const &receiver, knx_command_type_t ct, int16_t val);
-    void send2ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
-    void send3ByteTime(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
-    void send3ByteTime(address_t const &receiver, knx_command_type_t ct, time_of_day_t const &time) { send3ByteTime(receiver, ct, time.weekday, time.hours, time.minutes, time.seconds); }
-    void send3ByteDate(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
-    void send3ByteDate(address_t const &receiver, knx_command_type_t ct, date_t const &date) { send3ByteDate(receiver, ct, date.day, date.month, date.year); }
-    void send3ByteColor(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
-    void send3ByteColor(address_t const &receiver, knx_command_type_t ct, color_t const &color) { send3ByteColor(receiver, ct, color.red, color.green, color.blue); }
-    void send4ByteFloat(address_t const &receiver, knx_command_type_t ct, float val);
+    void send_1bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit);
+    void send_2bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit);
+    void send_4bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit);
+    void send_1byte_int(address_t const &receiver, knx_command_type_t ct, int8_t val);
+    void send_2byte_int(address_t const &receiver, knx_command_type_t ct, int16_t val);
+    void send_2byte_float(address_t const &receiver, knx_command_type_t ct, float val);
+    void send_3byte_time(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
+    void send_3byte_time(address_t const &receiver, knx_command_type_t ct, time_of_day_t const &time) { send_3byte_time(receiver, ct, time.weekday, time.hours, time.minutes, time.seconds); }
+    void send_3byte_date(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year);
+    void send_3byte_date(address_t const &receiver, knx_command_type_t ct, date_t const &date) { send_3byte_date(receiver, ct, date.day, date.month, date.year); }
+    void send_3byte_color(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue);
+    void send_3byte_color(address_t const &receiver, knx_command_type_t ct, color_t const &color) { send_3byte_color(receiver, ct, color.red, color.green, color.blue); }
+    void send_4byte_float(address_t const &receiver, knx_command_type_t ct, float val);
 
-    void write1Bit(address_t const &receiver, uint8_t bit) { send1Bit(receiver, KNX_CT_WRITE, bit); }
-    void write2Bit(address_t const &receiver, uint8_t twobit) { send2Bit(receiver, KNX_CT_WRITE, twobit); }
-    void write4Bit(address_t const &receiver, uint8_t fourbit) { send4Bit(receiver, KNX_CT_WRITE, fourbit); }
-    void write1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_WRITE, val); }
-    void write2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_WRITE, val); }
-    void write2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_WRITE, val); }
-    void write3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_WRITE, weekday, hours, minutes, seconds); }
-    void write3ByteTime(address_t const &receiver, time_of_day_t const &time) { send3ByteTime(receiver, KNX_CT_WRITE, time.weekday, time.hours, time.minutes, time.seconds); }
-    void write3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_WRITE, day, month, year); }
-    void write3ByteDate(address_t const &receiver, date_t const &date) { send3ByteDate(receiver, KNX_CT_WRITE, date.day, date.month, date.year); }
-    void write3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_WRITE, red, green, blue); }
-    void write3ByteColor(address_t const &receiver, color_t const &color) { send3ByteColor(receiver, KNX_CT_WRITE, color); }
-    void write4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_WRITE, val);}
+    void write_1bit(address_t const &receiver, uint8_t bit) { send_1bit(receiver, KNX_CT_WRITE, bit); }
+    void write_2bit(address_t const &receiver, uint8_t twobit) { send_2bit(receiver, KNX_CT_WRITE, twobit); }
+    void write_4bit(address_t const &receiver, uint8_t fourbit) { send_4bit(receiver, KNX_CT_WRITE, fourbit); }
+    void write_1byte_int(address_t const &receiver, int8_t val) { send_1byte_int(receiver, KNX_CT_WRITE, val); }
+    void write_2byte_int(address_t const &receiver, int16_t val) { send_2byte_int(receiver, KNX_CT_WRITE, val); }
+    void write_2byte_float(address_t const &receiver, float val) { send_2byte_float(receiver, KNX_CT_WRITE, val); }
+    void write_3byte_time(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send_3byte_time(receiver, KNX_CT_WRITE, weekday, hours, minutes, seconds); }
+    void write_3byte_time(address_t const &receiver, time_of_day_t const &time) { send_3byte_time(receiver, KNX_CT_WRITE, time.weekday, time.hours, time.minutes, time.seconds); }
+    void write_3byte_date(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send_3byte_date(receiver, KNX_CT_WRITE, day, month, year); }
+    void write_3byte_date(address_t const &receiver, date_t const &date) { send_3byte_date(receiver, KNX_CT_WRITE, date.day, date.month, date.year); }
+    void write_3byte_color(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send_3byte_color(receiver, KNX_CT_WRITE, red, green, blue); }
+    void write_3byte_color(address_t const &receiver, color_t const &color) { send_3byte_color(receiver, KNX_CT_WRITE, color); }
+    void write_4byte_float(address_t const &receiver, float val) { send_4byte_float(receiver, KNX_CT_WRITE, val);}
 
-    void answer1Bit(address_t const &receiver, uint8_t bit) { send1Bit(receiver, KNX_CT_ANSWER, bit); }
-    void answer2Bit(address_t const &receiver, uint8_t twobit) { send2Bit(receiver, KNX_CT_ANSWER, twobit); }
-    void answer4Bit(address_t const &receiver, uint8_t fourbit) { send4Bit(receiver, KNX_CT_ANSWER, fourbit); }
-    void answer1ByteInt(address_t const &receiver, int8_t val) { send1ByteInt(receiver, KNX_CT_ANSWER, val); }
-    void answer2ByteInt(address_t const &receiver, int16_t val) { send2ByteInt(receiver, KNX_CT_ANSWER, val); }
-    void answer2ByteFloat(address_t const &receiver, float val) { send2ByteFloat(receiver, KNX_CT_ANSWER, val); }
-    void answer3ByteTime(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send3ByteTime(receiver, KNX_CT_ANSWER, weekday, hours, minutes, seconds); }
-    void answer3ByteTime(address_t const &receiver, time_of_day_t const &time) { send3ByteTime(receiver, KNX_CT_ANSWER, time.weekday, time.hours, time.minutes, time.seconds); }
-    void answer3ByteDate(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send3ByteDate(receiver, KNX_CT_ANSWER, day, month, year); }
-    void answer3ByteDate(address_t const &receiver, date_t const &date) { send3ByteDate(receiver, KNX_CT_ANSWER, date.day, date.month, date.year); }
-    void answer3ByteColor(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send3ByteColor(receiver, KNX_CT_ANSWER, red, green, blue); }
-    void answer3ByteColor(address_t const &receiver, color_t const &color) { send3ByteColor(receiver, KNX_CT_ANSWER, color); }
-    void answer4ByteFloat(address_t const &receiver, float val) { send4ByteFloat(receiver, KNX_CT_ANSWER, val);}
+    void answer_1bit(address_t const &receiver, uint8_t bit) { send_1bit(receiver, KNX_CT_ANSWER, bit); }
+    void answer_2bit(address_t const &receiver, uint8_t twobit) { send_2bit(receiver, KNX_CT_ANSWER, twobit); }
+    void answer_4bit(address_t const &receiver, uint8_t fourbit) { send_4bit(receiver, KNX_CT_ANSWER, fourbit); }
+    void answer_1byte_int(address_t const &receiver, int8_t val) { send_1byte_int(receiver, KNX_CT_ANSWER, val); }
+    void answer_2byte_int(address_t const &receiver, int16_t val) { send_2byte_int(receiver, KNX_CT_ANSWER, val); }
+    void answer_2byte_float(address_t const &receiver, float val) { send_2byte_float(receiver, KNX_CT_ANSWER, val); }
+    void answer_3byte_time(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send_3byte_time(receiver, KNX_CT_ANSWER, weekday, hours, minutes, seconds); }
+    void answer_3byte_time(address_t const &receiver, time_of_day_t const &time) { send_3byte_time(receiver, KNX_CT_ANSWER, time.weekday, time.hours, time.minutes, time.seconds); }
+    void answer_3byte_date(address_t const &receiver, uint8_t day, uint8_t month, uint8_t year) { send_3byte_date(receiver, KNX_CT_ANSWER, day, month, year); }
+    void answer_3byte_date(address_t const &receiver, date_t const &date) { send_3byte_date(receiver, KNX_CT_ANSWER, date.day, date.month, date.year); }
+    void answer_3byte_color(address_t const &receiver, uint8_t red, uint8_t green, uint8_t blue) { send_3byte_color(receiver, KNX_CT_ANSWER, red, green, blue); }
+    void answer_3byte_color(address_t const &receiver, color_t const &color) { send_3byte_color(receiver, KNX_CT_ANSWER, color); }
+    void answer_4byte_float(address_t const &receiver, float val) { send_4byte_float(receiver, KNX_CT_ANSWER, val);}
 
     int8_t        data_to_1byte_int(uint8_t *data);
     int16_t       data_to_2byte_int(uint8_t *data);
