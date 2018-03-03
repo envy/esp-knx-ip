@@ -121,6 +121,17 @@ int16_t ESPKNXIP::data_to_2byte_int(uint8_t *data)
   return (int16_t)((data[1] << 8) | data[2]);
 }
 
+void ESPKNXIP::send_2byte_uint(address_t const &receiver, knx_command_type_t ct, uint16_t val)
+{
+  uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
+  send(receiver, ct, 3, buf);
+}
+
+uint16_t ESPKNXIP::data_to_2byte_uint(uint8_t *data)
+{
+  return (uint16_t)((data[1] << 8) | data[2]);
+}
+
 void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct, float val)
 {
   float v = val * 100.0f;

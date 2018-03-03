@@ -400,6 +400,7 @@ class ESPKNXIP {
     void send_1byte_int(address_t const &receiver, knx_command_type_t ct, int8_t val);
     void send_1byte_uint(address_t const &receiver, knx_command_type_t ct, uint8_t val);
     void send_2byte_int(address_t const &receiver, knx_command_type_t ct, int16_t val);
+    void send_2byte_uint(address_t const &receiver, knx_command_type_t ct, uint16_t val);
     void send_2byte_float(address_t const &receiver, knx_command_type_t ct, float val);
     void send_3byte_time(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds);
     void send_3byte_time(address_t const &receiver, knx_command_type_t ct, time_of_day_t const &time) { send_3byte_time(receiver, ct, time.weekday, time.hours, time.minutes, time.seconds); }
@@ -415,6 +416,7 @@ class ESPKNXIP {
     void write_1byte_int(address_t const &receiver, int8_t val) { send_1byte_int(receiver, KNX_CT_WRITE, val); }
     void write_1byte_uint(address_t const &receiver, uint8_t val) { send_1byte_uint(receiver, KNX_CT_WRITE, val); }
     void write_2byte_int(address_t const &receiver, int16_t val) { send_2byte_int(receiver, KNX_CT_WRITE, val); }
+    void write_2byte_uint(address_t const &receiver, uint16_t val) { send_2byte_uint(receiver, KNX_CT_WRITE, val); }
     void write_2byte_float(address_t const &receiver, float val) { send_2byte_float(receiver, KNX_CT_WRITE, val); }
     void write_3byte_time(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send_3byte_time(receiver, KNX_CT_WRITE, weekday, hours, minutes, seconds); }
     void write_3byte_time(address_t const &receiver, time_of_day_t const &time) { send_3byte_time(receiver, KNX_CT_WRITE, time.weekday, time.hours, time.minutes, time.seconds); }
@@ -430,6 +432,7 @@ class ESPKNXIP {
     void answer_1byte_int(address_t const &receiver, int8_t val) { send_1byte_int(receiver, KNX_CT_ANSWER, val); }
     void answer_1byte_uint(address_t const &receiver, uint8_t val) { send_1byte_uint(receiver, KNX_CT_ANSWER, val); }
     void answer_2byte_int(address_t const &receiver, int16_t val) { send_2byte_int(receiver, KNX_CT_ANSWER, val); }
+    void answer_2byte_uint(address_t const &receiver, uint16_t val) { send_2byte_uint(receiver, KNX_CT_ANSWER, val); }
     void answer_2byte_float(address_t const &receiver, float val) { send_2byte_float(receiver, KNX_CT_ANSWER, val); }
     void answer_3byte_time(address_t const &receiver, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds) { send_3byte_time(receiver, KNX_CT_ANSWER, weekday, hours, minutes, seconds); }
     void answer_3byte_time(address_t const &receiver, time_of_day_t const &time) { send_3byte_time(receiver, KNX_CT_ANSWER, time.weekday, time.hours, time.minutes, time.seconds); }
@@ -442,6 +445,7 @@ class ESPKNXIP {
     int8_t        data_to_1byte_int(uint8_t *data);
     uint8_t       data_to_1byte_uint(uint8_t *data);
     int16_t       data_to_2byte_int(uint8_t *data);
+    uint16_t      data_to_2byte_uint(uint8_t *data);
     float         data_to_2byte_float(uint8_t *data);
     float         data_to_4byte_float(uint8_t *data);
     color_t       data_to_3byte_color(uint8_t *data);
