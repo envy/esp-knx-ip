@@ -448,6 +448,7 @@ class ESPKNXIP {
     void answer_4byte_uint(address_t const &receiver, uint32_t val) { send_4byte_uint(receiver, KNX_CT_ANSWER, val); }
     void answer_4byte_float(address_t const &receiver, float val) { send_4byte_float(receiver, KNX_CT_ANSWER, val);}
 
+    bool          data_to_bool(uint8_t *data);
     int8_t        data_to_1byte_int(uint8_t *data);
     uint8_t       data_to_1byte_uint(uint8_t *data);
     int16_t       data_to_2byte_int(uint8_t *data);

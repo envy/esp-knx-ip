@@ -10,6 +10,11 @@
  * Conversion functions
  */
 
+bool ESPKNXIP::data_to_bool(uint8_t *data)
+{
+	return (data[0] & 0x01) == 1 ? true : false;
+}
+
 int8_t ESPKNXIP::data_to_1byte_int(uint8_t *data)
 {
 	return (int8_t)data[1];
