@@ -94,20 +94,10 @@ void ESPKNXIP::send_1byte_int(address_t const &receiver, knx_command_type_t ct, 
 	send(receiver, ct, 2, buf);
 }
 
-int8_t ESPKNXIP::data_to_1byte_int(uint8_t *data)
-{
-	return (int8_t)data[1];
-}
-
 void ESPKNXIP::send_1byte_uint(address_t const &receiver, knx_command_type_t ct, uint8_t val)
 {
 	uint8_t buf[] = {0x00, val};
 	send(receiver, ct, 2, buf);
-}
-
-uint8_t ESPKNXIP::data_to_1byte_uint(uint8_t *data)
-{
-	return data[1];
 }
 
 void ESPKNXIP::send_2byte_int(address_t const &receiver, knx_command_type_t ct, int16_t val)
@@ -116,20 +106,10 @@ void ESPKNXIP::send_2byte_int(address_t const &receiver, knx_command_type_t ct, 
 	send(receiver, ct, 3, buf);
 }
 
-int16_t ESPKNXIP::data_to_2byte_int(uint8_t *data)
-{
-	return (int16_t)((data[1] << 8) | data[2]);
-}
-
 void ESPKNXIP::send_2byte_uint(address_t const &receiver, knx_command_type_t ct, uint16_t val)
 {
 	uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
 	send(receiver, ct, 3, buf);
-}
-
-uint16_t ESPKNXIP::data_to_2byte_uint(uint8_t *data)
-{
-	return (uint16_t)((data[1] << 8) | data[2]);
 }
 
 void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct, float val)
@@ -148,29 +128,11 @@ void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct
 	send(receiver, ct, 3, buf);
 }
 
-float ESPKNXIP::data_to_2byte_float(uint8_t *data)
-{
-	//uint8_t  sign = (data[1] & 0b10000000) >> 7;
-	uint8_t  expo = (data[1] & 0b01111000) >> 3;
-	int16_t mant = ((data[1] & 0b10000111) << 8) | data[2];
-	return 0.01f * mant * pow(2, expo);
-}
-
 void ESPKNXIP::send_3byte_time(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
 {
 	weekday <<= 5;
 	uint8_t buf[] = {0x00, (((weekday << 5) & 0xE0) + (hours & 0x1F)), minutes & 0x3F, seconds & 0x3F};
 	send(receiver, ct, 4, buf);
-}
-
-time_of_day_t ESPKNXIP::data_to_3byte_time(uint8_t *data)
-{
-	time_of_day_t time;
-	time.weekday = (weekday_t)((data[1] & 0b11100000) >> 5);
-	time.hours = (data[1] & 0b00011111);
-	time.minutes = (data[2] & 0b00111111);
-	time.seconds = (data[3] & 0b00111111);
-	return time;
 }
 
 void ESPKNXIP::send_3byte_date(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
@@ -179,28 +141,10 @@ void ESPKNXIP::send_3byte_date(address_t const &receiver, knx_command_type_t ct,
 	send(receiver, ct, 4, buf);
 }
 
-date_t ESPKNXIP::data_to_3byte_data(uint8_t *data)
-{
-	date_t date;
-	date.day = (data[1] & 0b00011111);
-	date.month = (data[2] & 0b00001111);
-	date.year = (data[3] & 0b01111111);
-	return date;
-}
-
 void ESPKNXIP::send_3byte_color(address_t const &receiver, knx_command_type_t ct, uint8_t red, uint8_t green, uint8_t blue)
 {
 	uint8_t buf[] = {0x00, red, green, blue};
 	send(receiver, ct, 4, buf);
-}
-
-color_t ESPKNXIP::data_to_3byte_color(uint8_t *data)
-{
-	color_t color;
-	color.red = data[1];
-	color.green = data[2];
-	color.blue = data[3];
-	return color;
 }
 
 void ESPKNXIP::send_4byte_int(address_t const &receiver, knx_command_type_t ct, int32_t val)
@@ -213,11 +157,6 @@ void ESPKNXIP::send_4byte_int(address_t const &receiver, knx_command_type_t ct, 
 	send(receiver, ct, 5, buf);
 }
 
-int32_t ESPKNXIP::data_to_4byte_int(uint8_t *data)
-{
-	return (int32_t)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) | (data[4] << 0));
-}
-
 void ESPKNXIP::send_4byte_uint(address_t const &receiver, knx_command_type_t ct, uint32_t val)
 {
 	uint8_t buf[] = {0x00,
@@ -228,18 +167,8 @@ void ESPKNXIP::send_4byte_uint(address_t const &receiver, knx_command_type_t ct,
 	send(receiver, ct, 5, buf);
 }
 
-uint32_t ESPKNXIP::data_to_4byte_uint(uint8_t *data)
-{
-	return (uint32_t)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) | (data[4] << 0));
-}
-
 void ESPKNXIP::send_4byte_float(address_t const &receiver, knx_command_type_t ct, float val)
 {
 	uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
 	send(receiver, ct, 5, buf);
-}
-
-float ESPKNXIP::data_to_4byte_float(uint8_t *data)
-{
-	return (float)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) |data[4]);
 }
