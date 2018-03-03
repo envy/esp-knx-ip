@@ -99,6 +99,17 @@ int8_t ESPKNXIP::data_to_1byte_int(uint8_t *data)
   return (int8_t)data[1];
 }
 
+void ESPKNXIP::send_1byte_uint(address_t const &receiver, knx_command_type_t ct, uint8_t val)
+{
+  uint8_t buf[] = {0x00, val};
+  send(receiver, ct, 2, buf);
+}
+
+uint8_t ESPKNXIP::data_to_1byte_uint(uint8_t *data)
+{
+  return data[1];
+}
+
 void ESPKNXIP::send_2byte_int(address_t const &receiver, knx_command_type_t ct, int16_t val)
 {
   uint8_t buf[] = {0x00, (uint8_t)(val >> 8), (uint8_t)(val & 0x00FF)};
