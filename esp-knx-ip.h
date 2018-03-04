@@ -41,7 +41,7 @@
 #include "Arduino.h"
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
-#include <WifiUDP.h>
+#include <WifiUdp.h>
 #include <ESP8266WebServer.h>
 
 #include "DPT.h"
