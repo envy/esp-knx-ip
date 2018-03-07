@@ -1,11 +1,12 @@
-#include <esp-knx-ip.h>
+#define ROOT_PREFIX ""  // (Optional) [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#include <esp-knx-ip.h> // Include KNX Library
 
 // WiFi config here
 const char* ssid = "ssid";
 const char* pass = "pass";
 
 // Common
-#define LED_PIN 13
+#define LED_PIN 13 // 13 on Sonoff, 2 on NodeMCU (inverted)
 
 // For Basic and S20
 #define BTN1_PIN 0
@@ -38,6 +39,7 @@ option_entry_t type_options[] = {
 
 config_id_t hostname_id;
 config_id_t type_id;
+callback_id_t callback_id;
 
 typedef struct __sonoff_channel
 {
@@ -69,15 +71,18 @@ void setup()
   Serial.begin(115200);
 
   // Register the config options
+  //knx.physical_address_set(knx.GA_to_address(1,1,1));    // Optional - Set Physical KNX Address of ESP KNX
   hostname_id = knx.config_register_string("Hostname", 20, String("sonoff"));
   type_id = knx.config_register_options("Type", type_options, SONOFF_TYPE_BASIC);
   
   channels[0].status_ga_id = knx.config_register_ga("Channel 1 Status GA");
+  //knx.config_set_ga(channels[0].status_ga_id, knx.GA_to_address(2,2,1)); // Optional - Set KNX Address for Channel 1 Status
   channels[1].status_ga_id = knx.config_register_ga("Channel 2 Status GA", is_4ch_or_4ch_pro);
   channels[2].status_ga_id = knx.config_register_ga("Channel 3 Status GA", is_4ch_or_4ch_pro);
   channels[3].status_ga_id = knx.config_register_ga("Channel 4 Status GA", is_4ch_or_4ch_pro);
 
-  knx.callback_register("Channel 1", channel_cb, &channels[0]);
+  callback_id = knx.callback_register("Channel 1", channel_cb, &channels[0]);
+  //knx.callback_assign(callback_id, knx.GA_to_address(2,2,1)); // Optional - Set KNX Address for Callback 1
   knx.callback_register("Channel 2", channel_cb, &channels[1], is_4ch_or_4ch_pro);
   knx.callback_register("Channel 3", channel_cb, &channels[2], is_4ch_or_4ch_pro);
   knx.callback_register("Channel 4", channel_cb, &channels[3], is_4ch_or_4ch_pro);
@@ -111,7 +116,11 @@ void setup()
   digitalWrite(LED_PIN, HIGH);
 
   // Start knx
-  knx.start();
+  knx.start(); // Start KNX with its own webserver
+  //knx.start(WebServer); // Start KNX with a webserver already running on 'WebServer'
+                          // On this case you might want to change ROOT_PREFIX to
+                          // #define ROOT_PREFIX   "/knx"  before  #include <esp-knx-ip.h>
+  //knx.start(nullptr); // Start KNX WITHOUT webserver
 
   Serial.println();
   Serial.println("Connected to wifi");
@@ -153,7 +162,8 @@ void check_button(sonoff_channel_t *chan)
   {
     chan->state = !chan->state;
     digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-    knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+    digitalWrite(LED_PIN, chan->state ? HIGH : LOW);
+    knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
   }
   chan->last_btn_state = state_now;
 }
@@ -163,7 +173,8 @@ void toggle_chan(void *arg)
   sonoff_channel_t *chan = (sonoff_channel_t *)arg;
   chan->state = !chan->state;
   digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-  knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+  digitalWrite(LED_PIN, chan->state ? HIGH : LOW);
+  knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
 }
 
 void channel_cb(message_t const &msg, void *arg)
@@ -175,9 +186,10 @@ void channel_cb(message_t const &msg, void *arg)
       chan->state = msg.data[0];
       Serial.println(chan->state ? "Toggle on" : "Toggle off");
       digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+      digitalWrite(LED_PIN, chan->state ? HIGH : LOW);
+      knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
       break;
      case KNX_CT_READ:
-      knx.answer1Bit(msg.received_on, chan->state);
+      knx.answer_1bit(msg.received_on, chan->state);
   }
 }
