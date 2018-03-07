@@ -13,7 +13,7 @@
 void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data)
 {
 	if (receiver.value == 0)
-	return;
+		return;
 
 	uint32_t len = 6 + 2 + 8 + data_len + 1; // knx_pkt + cemi_msg + cemi_service + data + checksum
 	DEBUG_PRINT(F("Creating packet with len "));
@@ -57,6 +57,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	}
 	buf[len - 1] = cs;
 
+#ifdef ESP_KNX_DEBUG
 	DEBUG_PRINT(F("Sending packet:"));
 	for (int i = 0; i < len; ++i)
 	{
@@ -64,10 +65,9 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 		DEBUG_PRINT(buf[i], 16);
 	}
 	DEBUG_PRINTLN(F(""));
+#endif
 
-	udp.beginPacketMulticast(MULTICAST_IP, MULTICAST_PORT, WiFi.localIP());
-	udp.write(buf, len);
-	udp.endPacket();
+	udp.writeTo(buf, len, MULTICAST_IP, MULTICAST_PORT);
 }
 
 void ESPKNXIP::send_1bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
