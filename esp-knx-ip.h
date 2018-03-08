@@ -467,6 +467,14 @@ class ESPKNXIP {
       address_t tmp = {.ga={line, area, member}};
       return tmp;
     }
+
+    static address_t PA_to_address(uint8_t area, uint8_t line, uint8_t member)
+    {
+      // Yes, the order is correct, see the struct definition above
+      address_t tmp = {.pa={line, area, member}};
+      return tmp;
+    }
+
   private:
     void __start();
     void __loop_knx();
