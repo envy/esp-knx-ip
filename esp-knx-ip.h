@@ -26,7 +26,9 @@
 
 // Webserver related
 #define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
-#define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#ifndef ROOT_PREFIX
+  #define ROOT_PREFIX             ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#endif
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
