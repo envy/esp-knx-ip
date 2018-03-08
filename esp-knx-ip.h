@@ -512,7 +512,7 @@ class ESPKNXIP {
     feedback_id_t registered_feedbacks;
     feedback_t feedbacks[MAX_FEEDBACKS];
 
-    uint16_t ntohs(uint16_t);
+    uint16_t __ntohs(uint16_t);
 };
 
 // Global "singleton" object
