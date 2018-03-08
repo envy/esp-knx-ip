@@ -169,7 +169,7 @@ void ESPKNXIP::restore_from_eeprom()
   DEBUG_PRINTLN(address, HEX);
 }
 
-uint16_t ESPKNXIP::ntohs(uint16_t n)
+uint16_t ESPKNXIP::__ntohs(uint16_t n)
 {
   return (uint16_t)((((uint8_t*)&n)[0] << 8) | (((uint8_t*)&n)[1]));
 }
@@ -365,7 +365,7 @@ void ESPKNXIP::__loop_knx()
   knx_ip_pkt_t *knx_pkt = (knx_ip_pkt_t *)buf;
 
   DEBUG_PRINT(F("ST: 0x"));
-  DEBUG_PRINTLN(ntohs(knx_pkt->service_type), 16);
+  DEBUG_PRINTLN(__ntohs(knx_pkt->service_type), 16);
 
   if (knx_pkt->header_len != 0x06 && knx_pkt->protocol_version != 0x10 && knx_pkt->service_type != KNX_ST_ROUTING_INDICATION)
     return;
