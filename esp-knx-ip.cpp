@@ -58,21 +58,27 @@ void ESPKNXIP::__start()
     server->on(__PHYS_PATH, [this](){
       __handle_set();
     });
+#if !DISABLE_EEPROM_BUTTONS
     server->on(__EEPROM_PATH, [this](){
       __handle_eeprom();
     });
+#endif
     server->on(__CONFIG_PATH, [this](){
       __handle_config();
     });
     server->on(__FEEDBACK_PATH, [this](){
       __handle_feedback();
     });
+#if !DISABLE_RESTORE_BUTTON
     server->on(__RESTORE_PATH, [this](){
       __handle_restore();
     });
+#endif
+#if !DISABLE_REBOOT_BUTTON
     server->on(__REBOOT_PATH, [this](){
       __handle_reboot();
     });
+#endif
     server->begin();
   }
 

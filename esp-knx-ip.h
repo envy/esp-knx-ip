@@ -27,6 +27,9 @@
 // Webserver related
 #define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
 #define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#define DISABLE_EEPROM_BUTTONS    0 // [Default 0] Set to 1 to disable the EEPROM buttons in the web ui.
+#define DISABLE_REBOOT_BUTTON     0 // [Default 0] Set to 1 to disable the reboot button in the web ui.
+#define DISABLE_RESTORE_BUTTON    0 // [Default 0] Set to 1 to disable the "restore defaults" button in the web ui.
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
@@ -485,11 +488,17 @@ class ESPKNXIP {
     void __handle_register();
     void __handle_delete();
     void __handle_set();
+#if !DISABLE_EEPROM_BUTTONS
     void __handle_eeprom();
+#endif
     void __handle_config();
     void __handle_feedback();
+#if !DISABLE_RESTORE_BUTTONS
     void __handle_restore();
+#endif
+#if !DISABLE_REBOOT_BUTTONS
     void __handle_reboot();
+#endif
 
     void __config_set_flags(config_id_t id, config_flags_t flags);
 
