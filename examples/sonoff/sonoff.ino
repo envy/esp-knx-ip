@@ -153,7 +153,7 @@ void check_button(sonoff_channel_t *chan)
   {
     chan->state = !chan->state;
     digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-    knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+    knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
   }
   chan->last_btn_state = state_now;
 }
@@ -163,7 +163,7 @@ void toggle_chan(void *arg)
   sonoff_channel_t *chan = (sonoff_channel_t *)arg;
   chan->state = !chan->state;
   digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-  knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+  knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
 }
 
 void channel_cb(message_t const &msg, void *arg)
@@ -175,9 +175,9 @@ void channel_cb(message_t const &msg, void *arg)
       chan->state = msg.data[0];
       Serial.println(chan->state ? "Toggle on" : "Toggle off");
       digitalWrite(chan->pin, chan->state ? HIGH : LOW);
-      knx.write1Bit(knx.config_get_ga(chan->status_ga_id), chan->state);
+      knx.write_1bit(knx.config_get_ga(chan->status_ga_id), chan->state);
       break;
      case KNX_CT_READ:
-      knx.answer1Bit(msg.received_on, chan->state);
+      knx.answer_1bit(msg.received_on, chan->state);
   }
 }

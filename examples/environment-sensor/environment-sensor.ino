@@ -103,9 +103,9 @@ void loop() {
 
     if (knx.config_get_bool(enable_sending_id))
     {
-      knx.write2ByteFloat(knx.config_get_ga(temp_ga), last_temp);
-      knx.write2ByteFloat(knx.config_get_ga(hum_ga), last_hum);
-      knx.write2ByteFloat(knx.config_get_ga(pres_ga), last_pres);
+      knx.write_2byte_float(knx.config_get_ga(temp_ga), last_temp);
+      knx.write_2byte_float(knx.config_get_ga(hum_ga), last_hum);
+      knx.write_2byte_float(knx.config_get_ga(pres_ga), last_pres);
     }
   }
 
@@ -128,7 +128,7 @@ void temp_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, last_temp);
+      knx.answer_2byte_float(msg.received_on, last_temp);
       break;
     }
   }
@@ -140,7 +140,7 @@ void hum_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, last_hum);
+      knx.answer_2byte_float(msg.received_on, last_hum);
       break;
     }
   }
@@ -152,7 +152,7 @@ void pres_cb(message_t const &msg, void *arg)
   {
     case KNX_CT_READ:
     {
-      knx.answer2ByteFloat(msg.received_on, last_pres);
+      knx.answer_2byte_float(msg.received_on, last_pres);
       break;
     }
   }
