@@ -22,8 +22,8 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	knx_ip_pkt_t *knx_pkt = (knx_ip_pkt_t *)buf;
 	knx_pkt->header_len = 0x06;
 	knx_pkt->protocol_version = 0x10;
-	knx_pkt->service_type = ntohs(KNX_ST_ROUTING_INDICATION);
-	knx_pkt->total_len.len = ntohs(len);
+	knx_pkt->service_type = __ntohs(KNX_ST_ROUTING_INDICATION);
+	knx_pkt->total_len.len = __ntohs(len);
 	cemi_msg_t *cemi_msg = (cemi_msg_t *)knx_pkt->pkt_data;
 	cemi_msg->message_code = KNX_MT_L_DATA_IND;
 	cemi_msg->additional_info_len = 0;
