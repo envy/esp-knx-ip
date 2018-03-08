@@ -3,6 +3,10 @@
 This is a library for the ESP8266 to enable KNXnet/IP communication. It uses UDP multicast on 224.0.23.12:3671.
 It is intended to be used with the Arduino platform for the ESP8266.
 
+## Prerequisities ##
+
+I recommend version 2.3.0 of the esp8266 board libraries. With 2.4.0 I experienced unstable receivement of packets.
+
 ## How to use ##
 
 The library is under development. API may change multiple times in the future.
@@ -79,10 +83,6 @@ void my_other_callback(message_t const &msg, void *arg)
 }
 
 ```
-
-## Prerequisities ##
-
-I recommend version 2.3.0 of the esp8266 board libraries. With 2.4.0 I experienced unstable receivement of packets.
 
 ## How to configure (buildtime) ##
 
