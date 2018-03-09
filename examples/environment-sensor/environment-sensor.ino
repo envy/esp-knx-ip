@@ -10,7 +10,7 @@
 const char* ssid = "myssid";
 const char* pass = "mypassword";
 
-#define LED_PIN D4
+#define LED_PIN 2
 #define UPDATE_INTERVAL 10000
 
 unsigned long next_change = 0;
