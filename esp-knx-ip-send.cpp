@@ -14,8 +14,11 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 {
 	if (receiver.value == 0)
 	return;
-
+#if SEND_CHECKSUM
 	uint32_t len = 6 + 2 + 8 + data_len + 1; // knx_pkt + cemi_msg + cemi_service + data + checksum
+#else
+	uint32_t len = 6 + 2 + 8 + data_len; // knx_pkt + cemi_msg + cemi_service + data
+#endif
 	DEBUG_PRINT(F("Creating packet with len "));
 	DEBUG_PRINTLN(len)
 	uint8_t buf[len];
@@ -49,6 +52,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	memcpy(cemi_data->data, data, data_len);
 	cemi_data->data[0] = (cemi_data->data[0] & 0x3F) | ((ct & 0x03) << 6);
 
+#if SEND_CHECKSUM
 	// Calculate checksum, which is just XOR of all bytes
 	uint8_t cs = buf[0] ^ buf[1];
 	for (uint32_t i = 2; i < len - 1; ++i)
@@ -56,7 +60,8 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 		cs ^= buf[i];
 	}
 	buf[len - 1] = cs;
-
+#endif
+	
 	DEBUG_PRINT(F("Sending packet:"));
 	for (int i = 0; i < len; ++i)
 	{

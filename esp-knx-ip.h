@@ -34,6 +34,7 @@
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
 #define MULTICAST_IP              IPAddress(224, 0, 23, 12) // [Default IPAddress(224, 0, 23, 12)]
+#define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
 #define ESP_KNX_DEBUG
