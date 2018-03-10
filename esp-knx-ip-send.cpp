@@ -78,19 +78,19 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 
 void ESPKNXIP::send_1bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
 {
-	uint8_t buf[] = {bit & 0b00000001};
+	uint8_t buf[] = {(uint8_t)(bit & 0b00000001)};
 	send(receiver, ct, 1, buf);
 }
 
 void ESPKNXIP::send_2bit(address_t const &receiver, knx_command_type_t ct, uint8_t twobit)
 {
-	uint8_t buf[] = {twobit & 0b00000011};
+	uint8_t buf[] = {(uint8_t)(twobit & 0b00000011)};
 	send(receiver, ct, 1, buf);
 }
 
 void ESPKNXIP::send_4bit(address_t const &receiver, knx_command_type_t ct, uint8_t fourbit)
 {
-	uint8_t buf[] = {fourbit & 0b00001111};
+	uint8_t buf[] = {(uint8_t)(fourbit & 0b00001111)};
 	send(receiver, ct, 1, buf);
 }
 
@@ -137,13 +137,13 @@ void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct
 void ESPKNXIP::send_3byte_time(address_t const &receiver, knx_command_type_t ct, uint8_t weekday, uint8_t hours, uint8_t minutes, uint8_t seconds)
 {
 	weekday <<= 5;
-	uint8_t buf[] = {0x00, (((weekday << 5) & 0xE0) + (hours & 0x1F)), minutes & 0x3F, seconds & 0x3F};
+	uint8_t buf[] = {0x00, (uint8_t)(((weekday << 5) & 0xE0) | (hours & 0x1F)), (uint8_t)(minutes & 0x3F), (uint8_t)(seconds & 0x3F)};
 	send(receiver, ct, 4, buf);
 }
 
 void ESPKNXIP::send_3byte_date(address_t const &receiver, knx_command_type_t ct, uint8_t day, uint8_t month, uint8_t year)
 {
-	uint8_t buf[] = {0x00, day & 0x1F, month & 0x0F, year};
+	uint8_t buf[] = {0x00, (uint8_t)(day & 0x1F), (uint8_t)(month & 0x0F), year};
 	send(receiver, ct, 4, buf);
 }
 

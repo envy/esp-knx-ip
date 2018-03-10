@@ -253,7 +253,7 @@ void ESPKNXIP::__handle_root()
   m += F("</form>");
   m += F("</div>");
 #endif
-#if DISABLE_REBOOT_BUTTON
+#if !DISABLE_REBOOT_BUTTON
   // Reboot
   m += F("<div class='col-auto'>");
   m += F("<form action='" __REBOOT_PATH "' method='POST'>");

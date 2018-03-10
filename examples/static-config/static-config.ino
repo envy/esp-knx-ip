@@ -41,7 +41,7 @@ void setup() {
   knx.callback_assign(pres_cb, knx.GA_to_address(2, 1, 3));
 
   // Set physical address (1.1.1)
-  knx.physical_address_set(knx.PA_to_address(1, 1, 1))
+  knx.physical_address_set(knx.PA_to_address(1, 1, 1));
 
   // Do not call knx.load() for static config, it will try to load config from EEPROM which we don't have here
 
