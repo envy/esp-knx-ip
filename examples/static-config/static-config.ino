@@ -1,5 +1,6 @@
 /*
  * This is an example showing a simple environment sensor based on a BME280 attached via I2C.
+ * It shows, how the library can used to statically configure a device without a webserver for config.
  * This sketch was tested on a WeMos D1 mini
  */
 
@@ -19,35 +20,30 @@ float last_temp = 0.0;
 float last_hum = 0.0;
 float last_pres = 0.0;
 
-config_id_t temp_ga, hum_ga, pres_ga;
-config_id_t hostname_id;
-config_id_t update_rate_id, send_rate_id;
-config_id_t enable_sending_id;
-config_id_t enable_reading_id;
-
 Adafruit_BME280 bme;
+
+// Group addresses to send to (1/1/1, 1/1/2 and 1/1/3)
+address_t temp_ga = knx.GA_to_address(1, 1, 1);
+address_t hum_ga = knx.GA_to_address(1, 1, 2);
+address_t pres_ga = knx.GA_to_address(1, 1, 3);
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   Serial.begin(115200);
 
-  hostname_id = knx.config_register_string("Hostname", 20, String("env"));
-  enable_sending_id = knx.config_register_bool("Send on update", true);
-  update_rate_id = knx.config_register_int("Update rate (ms)", UPDATE_INTERVAL);
-  temp_ga = knx.config_register_ga("Temperature", show_periodic_options);
-  hum_ga = knx.config_register_ga("Humidity", show_periodic_options);
-  pres_ga = knx.config_register_ga("Pressure", show_periodic_options);
+  callback_id_t temp_cb = knx.callback_register("Read Temperature", temp_cb);
+  callback_id_t hum_cb =knx.callback_register("Read Humidity", hum_cb);
+  callback_id_t pres_cb =knx.callback_register("Read Pressure", pres_cb);
 
-  knx.callback_register("Read Temperature", temp_cb);
-  knx.callback_register("Read Humidity", hum_cb);
-  knx.callback_register("Read Pressure", pres_cb);
+  // Assign callbacks to group addresses (2/1/1, 2/1/2, 2/1/3)
+  knx.callback_assign(temp_cb, knx.GA_to_address(2, 1, 1));
+  knx.callback_assign(hum_cb, knx.GA_to_address(2, 1, 2));
+  knx.callback_assign(pres_cb, knx.GA_to_address(2, 1, 3));
 
-  knx.feedback_register_float("Temperature (°C)", &last_temp);
-  knx.feedback_register_float("Humidity (%)", &last_hum);
-  knx.feedback_register_float("Pressure (hPa)", &last_pres, 0);
+  // Set physical address (1.1.1)
+  knx.physical_address_set(knx.PA_to_address(1, 1, 1))
 
-  // Load previous config from EEPROM
-  knx.load();
+  // Do not call knx.load() for static config, it will try to load config from EEPROM which we don't have here
 
   // Init sensor
   if (!bme.begin(0x76)) {  
@@ -55,7 +51,7 @@ void setup() {
   }
 
   // Init WiFi
-  WiFi.hostname(knx.config_get_string(hostname_id));
+  WiFi.hostname("env");
   WiFi.begin(ssid, pass);
 
   Serial.println("");
@@ -72,8 +68,8 @@ void setup() {
   }
   digitalWrite(LED_PIN, HIGH);
 
-  // Start knx
-  knx.start();
+  // Start knx, disable webserver by passing nullptr
+  knx.start(nullptr);
 
   Serial.println();
   Serial.println("Connected to wifi");
@@ -87,7 +83,7 @@ void loop() {
 
   if (next_change < now)
   {
-    next_change = now + knx.config_get_int(update_rate_id);
+    next_change = now + UPDATE_INTERVAL;
 
     last_temp = bme.readTemperature();
     last_hum = bme.readHumidity();
@@ -101,25 +97,12 @@ void loop() {
     Serial.print(last_pres);
     Serial.println("hPa");
 
-    if (knx.config_get_bool(enable_sending_id))
-    {
-      knx.write_2byte_float(knx.config_get_ga(temp_ga), last_temp);
-      knx.write_2byte_float(knx.config_get_ga(hum_ga), last_hum);
-      knx.write_2byte_float(knx.config_get_ga(pres_ga), last_pres);
-    }
+    knx.write_2byte_float(temp_ga, last_temp);
+    knx.write_2byte_float(hum_ga, last_hum);
+    knx.write_2byte_float(pres_ga, last_pres);
   }
 
   delay(50);
-}
-
-bool show_periodic_options()
-{
-  return knx.config_get_bool(enable_sending_id);
-}
-
-bool enable_reading_callback()
-{
-  return knx.config_get_bool(enable_reading_id);
 }
 
 void temp_cb(message_t const &msg, void *arg)

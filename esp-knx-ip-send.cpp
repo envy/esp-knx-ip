@@ -15,15 +15,19 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	if (receiver.value == 0)
 		return;
 
+#if SEND_CHECKSUM
 	uint32_t len = 6 + 2 + 8 + data_len + 1; // knx_pkt + cemi_msg + cemi_service + data + checksum
+#else
+	uint32_t len = 6 + 2 + 8 + data_len; // knx_pkt + cemi_msg + cemi_service + data
+#endif
 	DEBUG_PRINT(F("Creating packet with len "));
 	DEBUG_PRINTLN(len)
 	uint8_t buf[len];
 	knx_ip_pkt_t *knx_pkt = (knx_ip_pkt_t *)buf;
 	knx_pkt->header_len = 0x06;
 	knx_pkt->protocol_version = 0x10;
-	knx_pkt->service_type = ntohs(KNX_ST_ROUTING_INDICATION);
-	knx_pkt->total_len.len = ntohs(len);
+	knx_pkt->service_type = __ntohs(KNX_ST_ROUTING_INDICATION);
+	knx_pkt->total_len.len = __ntohs(len);
 	cemi_msg_t *cemi_msg = (cemi_msg_t *)knx_pkt->pkt_data;
 	cemi_msg->message_code = KNX_MT_L_DATA_IND;
 	cemi_msg->additional_info_len = 0;
@@ -49,6 +53,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	memcpy(cemi_data->data, data, data_len);
 	cemi_data->data[0] = (cemi_data->data[0] & 0x3F) | ((ct & 0x03) << 6);
 
+#if SEND_CHECKSUM
 	// Calculate checksum, which is just XOR of all bytes
 	uint8_t cs = buf[0] ^ buf[1];
 	for (uint32_t i = 2; i < len - 1; ++i)
@@ -56,6 +61,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 		cs ^= buf[i];
 	}
 	buf[len - 1] = cs;
+#endif
 
 #ifdef ESP_KNX_DEBUG
 	DEBUG_PRINT(F("Sending packet:"));

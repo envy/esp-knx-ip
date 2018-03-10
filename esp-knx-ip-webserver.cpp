@@ -226,9 +226,11 @@ void ESPKNXIP::__handle_root()
     }
   }
 
+#if !(DISABLE_EEPROM_BUTTONS && DISABLE_RESTORE_BUTTON && DISABLE_REBOOT_BUTTON)
   // EEPROM save and restore
   m += F("<div class='row'>");
   // Save to EEPROM
+#if !DISABLE_EEPROM_BUTTONS
   m += F("<div class='col-auto'>");
   m += F("<form action='" __EEPROM_PATH "' method='POST'>");
   m += F("<input type='hidden' name='mode' value='1'>");
@@ -242,20 +244,25 @@ void ESPKNXIP::__handle_root()
   m += F("<button type='submit' class='btn btn-info'>Restore from EEPROM</button>");
   m += F("</form>");
   m += F("</div>");
+#endif
+#if !DISABLE_RESTORE_BUTTON
   // Load Defaults
   m += F("<div class='col-auto'>");
   m += F("<form action='" __RESTORE_PATH "' method='POST'>");
   m += F("<button type='submit' class='btn btn-warning'>Restore defaults</button>");
   m += F("</form>");
   m += F("</div>");
+#endif
+#if DISABLE_REBOOT_BUTTON
   // Reboot
   m += F("<div class='col-auto'>");
   m += F("<form action='" __REBOOT_PATH "' method='POST'>");
   m += F("<button type='submit' class='btn btn-danger'>Reboot</button>");
   m += F("</form>");
   m += F("</div>");
-
+#endif
   m += F("</div>"); // row
+#endif
 
   // End of page
   m += F("</div></body></html>");
@@ -464,6 +471,7 @@ end:
   server->send(302);
 }
 
+#if !DISABLE_RESTORE_BUTTONS
 void ESPKNXIP::__handle_restore()
 {
   DEBUG_PRINTLN(F("Restore called"));
@@ -472,7 +480,9 @@ end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(302);
 }
+#endif
 
+#if !DISABLE_REBOOT_BUTTONS
 void ESPKNXIP::__handle_reboot()
 {
   DEBUG_PRINTLN(F("Rebooting!"));
@@ -482,7 +492,9 @@ void ESPKNXIP::__handle_reboot()
   ESP.restart();
   //while(1);
 }
+#endif
 
+#if !DISABLE_EEPROM_BUTTONS
 void ESPKNXIP::__handle_eeprom()
 {
   DEBUG_PRINTLN(F("EEPROM called"));
@@ -509,3 +521,4 @@ end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(302);
 }
+#endif
