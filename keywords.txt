@@ -18,6 +18,7 @@ config_register_string	KEYWORD2
 config_register_int	KEYWORD2
 config_register_ga	KEYWORD2
 config_register_bool	KEYWORD2
+config_register_options KEYWORD2
 config_get_string	KEYWORD2
 config_get_int	KEYWORD2
 config_get_ga	KEYWORD2
