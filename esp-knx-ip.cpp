@@ -312,7 +312,7 @@ feedback_id_t ESPKNXIP::feedback_register_bool(String name, bool *value, enable_
   return id;
 }
 
-feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fptr_t value, void *arg, enable_condition_t cond)
+feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fptr_t value, String button_text, void *arg, enable_condition_t cond)
 {
   if (registered_feedbacks >= MAX_FEEDBACKS)
     return -1;
@@ -321,6 +321,7 @@ feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fp
 
   feedbacks[id].type = FEEDBACK_TYPE_ACTION;
   feedbacks[id].name = name;
+  feedbacks[id].button_text = button_text;
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.action_options.arg = arg;
