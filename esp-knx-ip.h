@@ -353,6 +353,15 @@ typedef struct __callback_assignment
   callback_id_t callback_id;
 } callback_assignment_t;
 
+typedef struct __config_webUI
+{
+  const char *WebPageTitle;
+  const char *PhysAddrLabel;
+  const char *Set;
+  const char *Add;
+  const char *Delete;
+} config_webUI_t;
+
 class ESPKNXIP {
   public:
     ESPKNXIP();
@@ -363,6 +372,17 @@ class ESPKNXIP {
 
     void save_to_eeprom();
     void restore_from_eeprom();
+  
+    // Set Defaults for translations
+    config_webUI_t config_webUI = {
+      "ESP KNX IP",
+      "Physical Address",
+      "Set",
+      "Add",
+      "Delete"
+    };
+  
+    void          config_web_UI(config_webUI_t custom_config_webUI);
 
     callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
     void          callback_assign(callback_id_t id, address_t val);
@@ -393,7 +413,7 @@ class ESPKNXIP {
     feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
     feedback_id_t feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
     feedback_id_t feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
+    feedback_id_t feedback_register_action(String name, feedback_action_fptr_t value, String button_text = "Do This", void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
