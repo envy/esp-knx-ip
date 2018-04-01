@@ -331,6 +331,7 @@ typedef struct __feedback
 {
   feedback_type_t type;
   String name;
+  String button_text;
   enable_condition_t cond;
   void *data;
   union {
