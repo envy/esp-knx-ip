@@ -13,6 +13,9 @@ void ESPKNXIP::__handle_root()
   m += F("<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css' integrity='sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm' crossorigin='anonymous'>");
   m += F("<style>.input-group-insert > .input-group-text { border-radius: 0; }</style>");
 #endif
+  m += F("<title>");
+  m += config_webUI.WebPageTitle;
+  m += F("</title>");
   m += F("</head><body><div class='container-fluid'>");
   m += F("<h2>ESP KNX</h2>");
 
@@ -49,11 +52,22 @@ void ESPKNXIP::__handle_root()
           m += (*(bool *)feedbacks[i].data) ? F("True") : F("False");
           m += F("</span>");
           break;
-        case FEEDBACK_TYPE_ACTION:
+        case FEEDBACK_TYPE_ACTION:          
           m += F("<input class='form-control' type='hidden' name='id' value='");
           m += i;
-          m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-primary'>Do this</button></div>");
-          break;
+          m += F("' />");
+          if (feedbacks[i].name.length())  // if there is no text, feedback_action is going to be just a button
+          {
+            m += F("<div class='input-group-append'>");
+          }
+          m += F("<button type='submit' class='btn btn-warning'>");
+          m += feedbacks[i].button_text;
+          m += F("</button>");
+          if (feedbacks[i].name.length())
+          {
+            m += F("</div>");
+          }
+          break;                    
       }
       m += F("</div></div></div>");
       m += F("</form>");
@@ -86,7 +100,9 @@ void ESPKNXIP::__handle_root()
       m += F("</span></div>");
       m += F("<input class='form-control' type='hidden' name='id' value='");
       m += i;
-      m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-danger'>Delete</button></div>");
+      m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-danger'>");
+      m += config_webUI.Delete;
+      m += F("</button></div>");
       m += F("</div></div></div>");
       m += F("</form>");
     }
@@ -116,7 +132,9 @@ void ESPKNXIP::__handle_root()
       m += F("</option>");
     }
     m += F("</select>");
-    m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
+    m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>");
+    m += config_webUI.Add;
+    m += F("</button></div>");    
     m += F("</div></div></div>");
     m += F("</form>");
   }
@@ -126,7 +144,9 @@ void ESPKNXIP::__handle_root()
   // Physical address
   m += F("<form action='" __PHYS_PATH "' method='POST'>");
   m += F("<div class='row'><div class='col-auto'><div class='input-group'>");
-  m += F("<div class='input-group-prepend'><span class='input-group-text'>Physical address</span></div>");
+  m += F("<div class='input-group-prepend'><span class='input-group-text'>");
+  m += config_webUI.PhysAddrLabel;
+  m += F("</span></div>");
   m += F("<input class='form-control' type='number' name='area' min='0' max='15' value='");
   m += physaddr.pa.area;
   m += F("'/>");
@@ -138,7 +158,9 @@ void ESPKNXIP::__handle_root()
   m += F("<input class='form-control' type='number' name='member' min='0' max='255' value='");
   m += physaddr.pa.member;
   m += F("'/>");
-  m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
+  m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>");
+  m += config_webUI.Set;
+  m += F("</button></div>");
   m += F("</div></div></div>");
   m += F("</form>");
 
@@ -220,7 +242,9 @@ void ESPKNXIP::__handle_root()
       m += F("<input type='hidden' name='id' value='");
       m += i;
       m += F("'/>");
-      m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>Set</button></div>");
+      m += F("<div class='input-group-append'><button type='submit' class='btn btn-primary'>");
+      m += config_webUI.Set;
+      m += F("</button></div>");
       m += F("</div></div></div>");
       m += F("</form>");
     }
@@ -267,6 +291,11 @@ void ESPKNXIP::__handle_root()
   // End of page
   m += F("</div></body></html>");
   server->send(200, F("text/html"), m);
+}
+
+void ESPKNXIP::config_web_UI(config_webUI_t custom_config_webUI)
+{
+  config_webUI = custom_config_webUI;
 }
 
 void ESPKNXIP::__handle_register()
