@@ -22,7 +22,7 @@
 #define MAX_FEEDBACKS             20 // [Default 20] Maximum number of feedbacks that can be shown
 
 // Callbacks
-#define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  0 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
+#define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  1 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
 
 // Webserver related
 #define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
@@ -37,7 +37,7 @@
 #define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
+//#define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
@@ -358,7 +358,7 @@ class ESPKNXIP {
     ESPKNXIP();
     void load();
     void start();
-    void start(ESP8266WebServer *srv, bool espknxip_webpage = true);
+    void start(ESP8266WebServer *srv);
     void loop();
 
     void save_to_eeprom();
@@ -481,7 +481,6 @@ class ESPKNXIP {
 
   private:
     void __start();
-    void __start_espknxip_webpage();
     void __loop_knx();
 
     // Webserver functions
