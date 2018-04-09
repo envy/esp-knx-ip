@@ -366,6 +366,9 @@ class ESPKNXIP {
 
     callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
     void          callback_assign(callback_id_t id, address_t val);
+  
+    void          callback_delete_register(callback_id_t id);
+    void          callback_delete_assignment(callback_assignment_id_t id);
 
     void          physical_address_set(address_t const &addr);
     address_t     physical_address_get();
