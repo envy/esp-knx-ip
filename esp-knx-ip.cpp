@@ -6,6 +6,14 @@
 
 #include "esp-knx-ip.h"
 
+char const *string_defaults[] =
+{
+  "Do this",
+  "True",
+  "False",
+  ""
+};
+
 ESPKNXIP::ESPKNXIP() : server(nullptr),
                       registered_callback_assignments(0),
                       free_callback_assignment_slots(0),
@@ -456,29 +464,15 @@ feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.float_options.precision = precision;
-  if (prefix == nullptr)
-  {
-    feedbacks[id].options.float_options.prefix = nullptr;
-  }
-  else
-  {
-    feedbacks[id].options.float_options.prefix = strdup(prefix);
-  }
-  if (suffix == nullptr)
-  {
-    feedbacks[id].options.float_options.suffix = nullptr;
-  }
-  else
-  {
-    feedbacks[id].options.float_options.suffix = strdup(suffix);
-  }
+  feedbacks[id].options.float_options.prefix = prefix ? strdup(prefix) : STRING_DEFAULT_EMPTY;
+  feedbacks[id].options.float_options.suffix = suffix ? strdup(suffix) : STRING_DEFAULT_EMPTY;
 
   registered_feedbacks++;
 
   return id;
 }
 
-feedback_id_t ESPKNXIP::feedback_register_bool(String name, bool *value, enable_condition_t cond)
+feedback_id_t ESPKNXIP::feedback_register_bool(String name, bool *value, char const *true_text, char const *false_text, enable_condition_t cond)
 {
   if (registered_feedbacks >= MAX_FEEDBACKS)
     return -1;
@@ -489,6 +483,8 @@ feedback_id_t ESPKNXIP::feedback_register_bool(String name, bool *value, enable_
   feedbacks[id].name = name;
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
+  feedbacks[id].options.bool_options.true_text = true_text ? strdup(true_text) : STRING_DEFAULT_TRUE;
+  feedbacks[id].options.bool_options.false_text = false_text ? strdup(false_text) : STRING_DEFAULT_FALSE;
 
   registered_feedbacks++;
 
@@ -507,14 +503,7 @@ feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fp
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.action_options.arg = arg;
-  if (btn_text == nullptr)
-  {
-    feedbacks[id].options.action_options.btn_text = nullptr;
-  }
-  else
-  {
-    feedbacks[id].options.action_options.btn_text = strdup(btn_text);
-  }
+  feedbacks[id].options.action_options.btn_text = btn_text ? strdup(btn_text) : STRING_DEFAULT_DO_THIS;
 
   registered_feedbacks++;
 

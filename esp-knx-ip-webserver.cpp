@@ -41,23 +41,9 @@ void ESPKNXIP::__handle_root()
           break;
         case FEEDBACK_TYPE_FLOAT:
           m += F("<span class='input-group-text'>");
-          if (feedbacks[i].options.float_options.prefix == nullptr)
-          {
-            m += F("");
-          }
-          else
-          {
-            m += feedbacks[i].options.float_options.prefix;
-          }
+          m += feedbacks[i].options.float_options.prefix;
           m += String(*(float *)feedbacks[i].data, feedbacks[i].options.float_options.precision);
-          if (feedbacks[i].options.float_options.suffix == nullptr)
-          {
-            m += F("");
-          }
-          else
-          {
-            m += feedbacks[i].options.float_options.suffix;
-          }
+          m += feedbacks[i].options.float_options.suffix;
           m += F("</span>");
           break;
         case FEEDBACK_TYPE_BOOL:
@@ -69,14 +55,7 @@ void ESPKNXIP::__handle_root()
           m += F("<input class='form-control' type='hidden' name='id' value='");
           m += i;
           m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-primary'>");
-          if (feedbacks[i].options.action_options.btn_text == nullptr)
-          {
-            m += F("");
-          }
-          else
-          {
-            m += feedbacks[i].options.action_options.btn_text;
-          }
+          m += feedbacks[i].options.action_options.btn_text;
           m += F("</button></div>");
           break;
       }

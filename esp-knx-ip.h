@@ -325,12 +325,24 @@ typedef struct __config
   } data;
 } config_t;
 
+extern char const *string_defaults[];
+#define STRING_DEFAULT_DO_THIS (string_defaults[0])
+#define STRING_DEFAULT_TRUE (string_defaults[1])
+#define STRING_DEFAULT_FALSE (string_defaults[2])
+#define STRING_DEFAULT_EMPTY (string_defaults[3])
+
 typedef struct __feedback_float_options
 {
   uint8_t precision;
   char const *prefix;
   char const *suffix;
 } feedback_float_options_t;
+
+typedef struct __feedback_bool_options
+{
+  char const *true_text;
+  char const *false_text;
+} feedback_bool_options_t;
 
 typedef struct __feedback_action_options
 {
@@ -345,6 +357,7 @@ typedef struct __feedback
   enable_condition_t cond;
   void *data;
   union {
+    feedback_bool_options_t bool_options;
     feedback_float_options_t float_options;
     feedback_action_options_t action_options;
   } options;
@@ -407,8 +420,8 @@ class ESPKNXIP {
     // Feedback functions
     feedback_id_t            feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
     feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, char const *prefix = nullptr, char const *suffix = nullptr, enable_condition_t cond = nullptr);
-    feedback_id_t            feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
-    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, char const *btn_text = "Do this", void *arg = nullptr, enable_condition_t = nullptr);
+    feedback_id_t            feedback_register_bool(String name, bool *value, char const *true_text = nullptr, char const *false_text = nullptr, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, char const *btn_text = nullptr, void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
