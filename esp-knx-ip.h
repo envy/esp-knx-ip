@@ -332,7 +332,8 @@ typedef struct __feedback_float_options
 
 typedef struct __feedback_action_options
 {
-  void * arg;
+  void *arg;
+  char const *btn_text;
 } feedback_action_options_t;
 
 typedef struct __feedback
@@ -405,7 +406,7 @@ class ESPKNXIP {
     feedback_id_t            feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
     feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
     feedback_id_t            feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
-    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
+    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, char const *btn_text = "Do this", void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);

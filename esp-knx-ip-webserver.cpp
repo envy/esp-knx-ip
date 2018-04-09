@@ -52,7 +52,9 @@ void ESPKNXIP::__handle_root()
         case FEEDBACK_TYPE_ACTION:
           m += F("<input class='form-control' type='hidden' name='id' value='");
           m += i;
-          m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-primary'>Do this</button></div>");
+          m += F("' /><div class='input-group-append'><button type='submit' class='btn btn-primary'>");
+          m += feedbacks[i].options.action_options.btn_text;
+          m += F("</button></div>");
           break;
       }
       m += F("</div></div></div>");
