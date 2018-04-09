@@ -309,7 +309,7 @@ typedef uint8_t feedback_id_t;
 
 typedef struct __option_entry
 {
-  char *name;
+  char const *name;
   uint8_t value;
 } option_entry_t;
 
