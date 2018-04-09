@@ -444,7 +444,7 @@ feedback_id_t ESPKNXIP::feedback_register_int(String name, int32_t *value, enabl
   return id;
 }
 
-feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8_t precision, enable_condition_t cond)
+feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8_t precision, char const *prefix, char const *suffix, enable_condition_t cond)
 {
   if (registered_feedbacks >= MAX_FEEDBACKS)
     return -1;
@@ -456,6 +456,22 @@ feedback_id_t ESPKNXIP::feedback_register_float(String name, float *value, uint8
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.float_options.precision = precision;
+  if (prefix == nullptr)
+  {
+    feedbacks[id].options.float_options.prefix = nullptr;
+  }
+  else
+  {
+    feedbacks[id].options.float_options.prefix = strdup(prefix);
+  }
+  if (suffix == nullptr)
+  {
+    feedbacks[id].options.float_options.suffix = nullptr;
+  }
+  else
+  {
+    feedbacks[id].options.float_options.suffix = strdup(suffix);
+  }
 
   registered_feedbacks++;
 
@@ -491,7 +507,14 @@ feedback_id_t ESPKNXIP::feedback_register_action(String name, feedback_action_fp
   feedbacks[id].cond = cond;
   feedbacks[id].data = (void *)value;
   feedbacks[id].options.action_options.arg = arg;
-  feedbacks[id].options.action_options.btn_text = strdup(btn_text);
+  if (btn_text == nullptr)
+  {
+    feedbacks[id].options.action_options.btn_text = nullptr;
+  }
+  else
+  {
+    feedbacks[id].options.action_options.btn_text = strdup(btn_text);
+  }
 
   registered_feedbacks++;
 

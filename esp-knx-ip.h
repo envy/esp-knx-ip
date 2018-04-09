@@ -328,6 +328,8 @@ typedef struct __config
 typedef struct __feedback_float_options
 {
   uint8_t precision;
+  char const *prefix;
+  char const *suffix;
 } feedback_float_options_t;
 
 typedef struct __feedback_action_options
@@ -404,7 +406,7 @@ class ESPKNXIP {
 
     // Feedback functions
     feedback_id_t            feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
-    feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, char const *prefix = nullptr, char const *suffix = nullptr, enable_condition_t cond = nullptr);
     feedback_id_t            feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
     feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, char const *btn_text = "Do this", void *arg = nullptr, enable_condition_t = nullptr);
 
