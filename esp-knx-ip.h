@@ -384,7 +384,7 @@ class ESPKNXIP {
     ESPKNXIP();
     void load();
     void start();
-    void start(ESP8266WebServer *srv);
+    void start(ESP8266WebServer *srv, bool espknxip_webpage = true);
     void loop();
 
     void save_to_eeprom();
@@ -509,6 +509,7 @@ class ESPKNXIP {
 
   private:
     void __start();
+    void __start_espknxip_webpage();
     void __loop_knx(AsyncUDPPacket &packet);
 
     // Webserver functions
