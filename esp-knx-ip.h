@@ -282,6 +282,12 @@ typedef enum __config_flags
   CONFIG_FLAGS_VALUE_SET = 1,
 } config_flags_t;
 
+typedef enum __slot_flags
+{
+  SLOT_FLAGS_EMPTY = 0, // Empty slots have no flags
+  SLOT_FLAGS_USED = 1,
+} slot_flags_t;
+
 typedef struct __message
 {
   knx_command_type_t ct;
@@ -295,7 +301,9 @@ typedef void (*callback_fptr_t)(message_t const &msg, void *arg);
 typedef void (*feedback_action_fptr_t)(void *arg);
 
 typedef uint8_t callback_id_t;
+#define CALLBACK_ID_MAX UINT8_MAX
 typedef uint8_t callback_assignment_id_t;
+#define CALLBACK_ASSIGNMENT_ID_MAX UINT8_MAX
 typedef uint8_t config_id_t;
 typedef uint8_t feedback_id_t;
 
@@ -341,6 +349,7 @@ typedef struct __feedback
 
 typedef struct __callback
 {
+  uint8_t slot_flags;
   callback_fptr_t fkt;
   enable_condition_t cond;
   void *arg;
@@ -349,6 +358,7 @@ typedef struct __callback
 
 typedef struct __callback_assignment
 {
+  uint8_t slot_flags;
   address_t address;
   callback_id_t callback_id;
 } callback_assignment_t;
@@ -364,36 +374,38 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
-    void          callback_assign(callback_id_t id, address_t val);
+    callback_id_t            callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
+    callback_assignment_id_t callback_assign(callback_id_t id, address_t val);
+    void                     callback_deregister(callback_id_t id);
+    void                     callback_unassign(callback_assignment_id_t id);
 
-    void          physical_address_set(address_t const &addr);
-    address_t     physical_address_get();
+    void                     physical_address_set(address_t const &addr);
+    address_t                physical_address_get();
 
     // Configuration functions
-    config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_ga(String name, enable_condition_t cond = nullptr);
+    config_id_t              config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_ga(String name, enable_condition_t cond = nullptr);
 
-    String        config_get_string(config_id_t id);
-    int32_t       config_get_int(config_id_t id);
-    bool          config_get_bool(config_id_t id);
-    uint8_t       config_get_options(config_id_t id);
-    address_t     config_get_ga(config_id_t id);
+    String                   config_get_string(config_id_t id);
+    int32_t                  config_get_int(config_id_t id);
+    bool                     config_get_bool(config_id_t id);
+    uint8_t                  config_get_options(config_id_t id);
+    address_t                config_get_ga(config_id_t id);
 
-    void          config_set_string(config_id_t id, String val);
-    void          config_set_int(config_id_t id, int32_t val);
-    void          config_set_bool(config_id_t, bool val);
-    void          config_set_options(config_id_t id, uint8_t val);
-    void          config_set_ga(config_id_t id, address_t const &val);
+    void                     config_set_string(config_id_t id, String val);
+    void                     config_set_int(config_id_t id, int32_t val);
+    void                     config_set_bool(config_id_t, bool val);
+    void                     config_set_options(config_id_t id, uint8_t val);
+    void                     config_set_ga(config_id_t id, address_t const &val);
 
     // Feedback functions
-    feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
+    feedback_id_t            feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
@@ -509,6 +521,8 @@ class ESPKNXIP {
     void __config_set_options(config_id_t id, uint8_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
+    bool __callback_is_id_valid(callback_id_t id);
+
     callback_assignment_id_t __callback_register_assignment(address_t address, callback_id_t id);
     void __callback_delete_assignment(callback_assignment_id_t id);
 
@@ -517,9 +531,11 @@ class ESPKNXIP {
     AsyncUDP udp;
 
     callback_assignment_id_t registered_callback_assignments;
+    callback_assignment_id_t free_callback_assignment_slots;
     callback_assignment_t callback_assignments[MAX_CALLBACK_ASSIGNMENTS];
 
     callback_id_t registered_callbacks;
+    callback_id_t free_callback_slots;
     callback_t callbacks[MAX_CALLBACKS];
 
     config_id_t registered_configs;
