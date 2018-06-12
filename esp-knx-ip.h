@@ -7,6 +7,14 @@
 #ifndef ESP_KNX_IP_H
 #define ESP_KNX_IP_H
 
+//#define USE_ASYNC_UDP     // UDP WIFI Library Selection for Multicast
+                          //   If commented out, the esp-knx-ip library will use WIFI_UDP Library that is compatible with ESP8266 Library Version 2.3.0 and up
+                          //   If not commented out, the esp-knx-ip library will use ESPAsyncUDP Library that is compatible with ESP8266 Library Version 2.4.0 and up
+                          //     The ESPAsyncUDP Library have a more reliable multicast communication
+                          //     Please Use it with Patch (https://github.com/me-no-dev/ESPAsyncUDP/pull/21) )
+                          //     check line 57 on esp-knx-ip.h file is uncommented: #include <ESPAsyncUDP.h>
+                          //       Comment out that line when using UDP WIFI to avoid compiling issues on PlatformIO with ESP8266 Library Version 2.3.0
+
 /**
  * CONFIG
  * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
@@ -22,14 +30,14 @@
 #define MAX_FEEDBACKS             20 // [Default 20] Maximum number of feedbacks that can be shown
 
 // Callbacks
-#define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  0 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
+#define ALLOW_MULTIPLE_CALLBACKS_PER_ADDRESS  1 // [Default 0] Set to 1 to always test all assigned callbacks. This allows for multiple callbacks being assigned to the same address. If disabled, only the first assigned will be called.
 
 // Webserver related
-#define USE_BOOTSTRAP             1 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
-#define ROOT_PREFIX               ""  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
-#define DISABLE_EEPROM_BUTTONS    0 // [Default 0] Set to 1 to disable the EEPROM buttons in the web ui.
-#define DISABLE_REBOOT_BUTTON     0 // [Default 0] Set to 1 to disable the reboot button in the web ui.
-#define DISABLE_RESTORE_BUTTON    0 // [Default 0] Set to 1 to disable the "restore defaults" button in the web ui.
+#define USE_BOOTSTRAP             0 // [Default 1] Set to 1 to enable use of bootstrap CSS for nicer webconfig. CSS is loaded from bootstrapcdn.com. Set to 0 to disable
+#define ROOT_PREFIX               "/knx"  // [Default ""] This gets prepended to all webserver paths, default is empty string "". Set this to "/knx" if you want the config to be available on http://<ip>/knx
+#define DISABLE_EEPROM_BUTTONS    1 // [Default 0] Set to 1 to disable the EEPROM buttons in the web ui.
+#define DISABLE_REBOOT_BUTTON     1 // [Default 0] Set to 1 to disable the reboot button in the web ui.
+#define DISABLE_RESTORE_BUTTON    1 // [Default 0] Set to 1 to disable the "restore defaults" button in the web ui.
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
@@ -37,7 +45,7 @@
 #define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
+//#define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
@@ -45,7 +53,13 @@
 #include "Arduino.h"
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
+
+#ifdef USE_ASYNC_UDP
+//#include <ESPAsyncUDP.h>
+#else
 #include <WiFiUdp.h>
+#endif
+
 #include <ESP8266WebServer.h>
 
 #include "DPT.h"
@@ -158,6 +172,14 @@ typedef enum __knx_communication_type {
 } knx_communication_type_t;
 
 /**
+ * acpi for KNX_COT_NCD
+ */
+typedef enum __knx_cot_ncd_ack_type {
+  KNX_COT_NCD_ACK = 0x10, // Inform positively reception of the Previouly received telegram
+  KNX_COT_NCD_NACK = 0x11, // Inform negatively reception of the Previouly received telegram
+} knx_cot_ncd_ack_type_t;
+
+/**
  * KNX/IP header
  */
 typedef struct __knx_ip_pkt
@@ -217,7 +239,7 @@ typedef struct __cemi_service
       uint8_t ack:1; // 0 = no ack, 1 = ack
       uint8_t priority:2; // 0 = system, 1 = high, 2 = urgent/alarm, 3 = normal
       uint8_t system_broadcast:1; // 0 = system broadcast, 1 = broadcast
-      uint8_t repeat:1; // 0 = repeat on error, 1 = do not repeat
+      uint8_t repeat:1; // 0 = repeated telegram, 1 = not repeated telegram
       uint8_t reserved:1; // always zero
       uint8_t frame_type:1; // 0 = extended, 1 = standard
     } bits;
@@ -282,6 +304,12 @@ typedef enum __config_flags
   CONFIG_FLAGS_VALUE_SET = 1,
 } config_flags_t;
 
+typedef enum __slot_flags
+{
+  SLOT_FLAGS_EMPTY = 0, // Empty slots have no flags
+  SLOT_FLAGS_USED = 1,
+} slot_flags_t;
+
 typedef struct __message
 {
   knx_command_type_t ct;
@@ -295,13 +323,15 @@ typedef void (*callback_fptr_t)(message_t const &msg, void *arg);
 typedef void (*feedback_action_fptr_t)(void *arg);
 
 typedef uint8_t callback_id_t;
+#define CALLBACK_ID_MAX UINT8_MAX
 typedef uint8_t callback_assignment_id_t;
+#define CALLBACK_ASSIGNMENT_ID_MAX UINT8_MAX
 typedef uint8_t config_id_t;
 typedef uint8_t feedback_id_t;
 
 typedef struct __option_entry
 {
-  char *name;
+  char const *name;
   uint8_t value;
 } option_entry_t;
 
@@ -317,14 +347,29 @@ typedef struct __config
   } data;
 } config_t;
 
+extern char const *string_defaults[];
+#define STRING_DEFAULT_DO_THIS (string_defaults[0])
+#define STRING_DEFAULT_TRUE (string_defaults[1])
+#define STRING_DEFAULT_FALSE (string_defaults[2])
+#define STRING_DEFAULT_EMPTY (string_defaults[3])
+
 typedef struct __feedback_float_options
 {
   uint8_t precision;
+  char const *prefix;
+  char const *suffix;
 } feedback_float_options_t;
+
+typedef struct __feedback_bool_options
+{
+  char const *true_text;
+  char const *false_text;
+} feedback_bool_options_t;
 
 typedef struct __feedback_action_options
 {
-  void * arg;
+  void *arg;
+  char const *btn_text;
 } feedback_action_options_t;
 
 typedef struct __feedback
@@ -334,6 +379,7 @@ typedef struct __feedback
   enable_condition_t cond;
   void *data;
   union {
+    feedback_bool_options_t bool_options;
     feedback_float_options_t float_options;
     feedback_action_options_t action_options;
   } options;
@@ -341,6 +387,7 @@ typedef struct __feedback
 
 typedef struct __callback
 {
+  uint8_t slot_flags;
   callback_fptr_t fkt;
   enable_condition_t cond;
   void *arg;
@@ -349,6 +396,7 @@ typedef struct __callback
 
 typedef struct __callback_assignment
 {
+  uint8_t slot_flags;
   address_t address;
   callback_id_t callback_id;
 } callback_assignment_t;
@@ -364,36 +412,38 @@ class ESPKNXIP {
     void save_to_eeprom();
     void restore_from_eeprom();
 
-    callback_id_t callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
-    void          callback_assign(callback_id_t id, address_t val);
+    callback_id_t            callback_register(String name, callback_fptr_t cb, void *arg = nullptr, enable_condition_t cond = nullptr);
+    callback_assignment_id_t callback_assign(callback_id_t id, address_t val);
+    void                     callback_deregister(callback_id_t id);
+    void                     callback_unassign(callback_assignment_id_t id);
 
-    void          physical_address_set(address_t const &addr);
-    address_t     physical_address_get();
+    void                     physical_address_set(address_t const &addr);
+    address_t                physical_address_get();
 
     // Configuration functions
-    config_id_t   config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
-    config_id_t   config_register_ga(String name, enable_condition_t cond = nullptr);
+    config_id_t              config_register_string(String name, uint8_t len, String _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_int(String name, int32_t _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_bool(String name, bool _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_options(String name, option_entry_t *options, uint8_t _default, enable_condition_t cond = nullptr);
+    config_id_t              config_register_ga(String name, enable_condition_t cond = nullptr);
 
-    String        config_get_string(config_id_t id);
-    int32_t       config_get_int(config_id_t id);
-    bool          config_get_bool(config_id_t id);
-    uint8_t       config_get_options(config_id_t id);
-    address_t     config_get_ga(config_id_t id);
+    String                   config_get_string(config_id_t id);
+    int32_t                  config_get_int(config_id_t id);
+    bool                     config_get_bool(config_id_t id);
+    uint8_t                  config_get_options(config_id_t id);
+    address_t                config_get_ga(config_id_t id);
 
-    void          config_set_string(config_id_t id, String val);
-    void          config_set_int(config_id_t id, int32_t val);
-    void          config_set_bool(config_id_t, bool val);
-    void          config_set_options(config_id_t id, uint8_t val);
-    void          config_set_ga(config_id_t id, address_t const &val);
+    void                     config_set_string(config_id_t id, String val);
+    void                     config_set_int(config_id_t id, int32_t val);
+    void                     config_set_bool(config_id_t, bool val);
+    void                     config_set_options(config_id_t id, uint8_t val);
+    void                     config_set_ga(config_id_t id, address_t const &val);
 
     // Feedback functions
-    feedback_id_t feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_float(String name, float *value, uint8_t precision = 2, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_bool(String name, bool *value, enable_condition_t cond = nullptr);
-    feedback_id_t feedback_register_action(String name, feedback_action_fptr_t value, void *arg = nullptr, enable_condition_t = nullptr);
+    feedback_id_t            feedback_register_int(String name, int32_t *value, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_float(String name, float *value, uint8_t precision = 2, char const *prefix = nullptr, char const *suffix = nullptr, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_bool(String name, bool *value, char const *true_text = nullptr, char const *false_text = nullptr, enable_condition_t cond = nullptr);
+    feedback_id_t            feedback_register_action(String name, feedback_action_fptr_t value, char const *btn_text = nullptr, void *arg = nullptr, enable_condition_t = nullptr);
 
     // Send functions
     void send(address_t const &receiver, knx_command_type_t ct, uint8_t data_len, uint8_t *data);
@@ -481,7 +531,12 @@ class ESPKNXIP {
 
   private:
     void __start();
+
+#ifdef USE_ASYNC_UDP
+    void __loop_knx(AsyncUDPPacket &packet);
+#else
     void __loop_knx();
+#endif
 
     // Webserver functions
     void __loop_webserver();
@@ -509,17 +564,26 @@ class ESPKNXIP {
     void __config_set_options(config_id_t id, uint8_t val);
     void __config_set_ga(config_id_t id, address_t const &val);
 
+    bool __callback_is_id_valid(callback_id_t id);
+
     callback_assignment_id_t __callback_register_assignment(address_t address, callback_id_t id);
     void __callback_delete_assignment(callback_assignment_id_t id);
 
     ESP8266WebServer *server;
     address_t physaddr;
+
+#ifdef USE_ASYNC_UDP
+    AsyncUDP udp;
+#else
     WiFiUDP udp;
+#endif
 
     callback_assignment_id_t registered_callback_assignments;
+    callback_assignment_id_t free_callback_assignment_slots;
     callback_assignment_t callback_assignments[MAX_CALLBACK_ASSIGNMENTS];
 
     callback_id_t registered_callbacks;
+    callback_id_t free_callback_slots;
     callback_t callbacks[MAX_CALLBACKS];
 
     config_id_t registered_configs;
