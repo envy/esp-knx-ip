@@ -95,6 +95,10 @@ void ESPKNXIP::__start()
       __handle_reboot();
     });
 #endif
+#if !DISABLE_FIRMWARE_UPDATE
+    updater = new ESP8266HTTPUpdateServer();
+    updater->setup(server, __UPDATE_PATH);
+#endif
     server->begin();
   }
 

@@ -277,6 +277,13 @@ void ESPKNXIP::__handle_root()
   m += F("</form>");
   m += F("</div>");
 #endif
+#if !DISABLE_FIRMWARE_UPDATE
+  m += F("<div class='col-auto'>");
+  m += F("<a href='" __UPDATE_PATH "'>");
+  m += F("<button type='submit' class='btn btn-warning'>Open Firmware Updater</button>");
+  m += F("</a>");
+  m += F("</div>");
+#endif
   m += F("</div>"); // row
 #endif
 

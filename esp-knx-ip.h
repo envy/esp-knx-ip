@@ -9,7 +9,7 @@
 
 /**
  * CONFIG
- * All MAX_ values must not exceed 255 (1 byte, except MAC_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
+ * All MAX_ values must not exceed 255 (1 byte, except MAX_CONFIG_SPACE which can go up to 2 bytes, so 0xffff in theory) and must not be negative!
  * Config space is restriced by EEPROM_SIZE (default 1024).
  * Required EEPROM size is 8 + MAX_GA_CALLBACKS * 3 + 2 + MAX_CONFIG_SPACE which is 552 by default
  */
@@ -30,6 +30,7 @@
 #define DISABLE_EEPROM_BUTTONS    0 // [Default 0] Set to 1 to disable the EEPROM buttons in the web ui.
 #define DISABLE_REBOOT_BUTTON     0 // [Default 0] Set to 1 to disable the reboot button in the web ui.
 #define DISABLE_RESTORE_BUTTON    0 // [Default 0] Set to 1 to disable the "restore defaults" button in the web ui.
+#define DISABLE_FIRMWARE_UPDATE   0 // [Default 0] Set to 1 to disable the firmware update functionality.
 
 // These values normally don't need adjustment
 #define MULTICAST_PORT            3671 // [Default 3671]
@@ -47,6 +48,9 @@
 #include <ESP8266WiFi.h>
 #include <ESPAsyncUDP.h>
 #include <ESP8266WebServer.h>
+#if !DISABLE_FIRMWARE_UPDATE
+#include <ESP8266HTTPUpdateServer.h>
+#endif
 
 #include "DPT.h"
 
@@ -75,6 +79,7 @@
 #define __FEEDBACK_PATH   ROOT_PREFIX"/feedback"
 #define __RESTORE_PATH    ROOT_PREFIX"/restore"
 #define __REBOOT_PATH     ROOT_PREFIX"/reboot"
+#define __UPDATE_PATH     ROOT_PREFIX"/fwupdate"
 
 /**
  * Different service types, we are mainly interested in KNX_ST_ROUTING_INDICATION
@@ -545,6 +550,9 @@ class ESPKNXIP {
     void __callback_delete_assignment(callback_assignment_id_t id);
 
     ESP8266WebServer *server;
+#if !DISABLE_FIRMWARE_UPDATE
+    ESP8266HTTPUpdateServer *updater;
+#endif
     address_t physaddr;
     AsyncUDP udp;
 
