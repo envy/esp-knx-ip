@@ -19,6 +19,7 @@ callback_register	KEYWORD2
 callback_assign	KEYWORD2
 callback_deregister	KEYWORD2
 callback_unassign	KEYWORD2
+callback_get_assignment	KEYWORD2
 physical_address_set	KEYWORD2
 physical_address_get	KEYWORD2
 config_register_string	KEYWORD2

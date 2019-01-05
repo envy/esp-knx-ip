@@ -326,6 +326,7 @@ typedef struct __config
 } config_t;
 
 extern char const *string_defaults[];
+extern address_t ADDRESS_NONE;
 #define STRING_DEFAULT_DO_THIS (string_defaults[0])
 #define STRING_DEFAULT_TRUE (string_defaults[1])
 #define STRING_DEFAULT_FALSE (string_defaults[2])
@@ -394,6 +395,7 @@ class ESPKNXIP {
     callback_assignment_id_t callback_assign(callback_id_t id, address_t val);
     void                     callback_deregister(callback_id_t id);
     void                     callback_unassign(callback_assignment_id_t id);
+    address_t                callback_get_assignment(callback_id_t);
 
     void                     physical_address_set(address_t const &addr);
     address_t                physical_address_get();

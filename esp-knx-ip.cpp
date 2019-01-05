@@ -14,6 +14,8 @@ char const *string_defaults[] =
   ""
 };
 
+address_t ADDRESS_NONE = {0};
+
 ESPKNXIP::ESPKNXIP() : server(nullptr),
                       registered_callback_assignments(0),
                       free_callback_assignment_slots(0),
@@ -429,6 +431,23 @@ void ESPKNXIP::callback_unassign(callback_assignment_id_t id)
     return;
 
   __callback_delete_assignment(id);
+}
+
+address_t ESPKNXIP::callback_get_assignment(callback_id_t id)
+{
+  if (!__callback_is_id_valid(id))
+    return ADDRESS_NONE;
+
+  // Iterate through all assignments and return the first one that matches
+  for (int i = 0; i < registered_callback_assignments; ++i)
+  {
+    if (callback_assignments[i].callback_id == id)
+    {
+      return callback_assignments[i].address;
+    }
+  }
+
+  return ADDRESS_NONE;
 }
 
 /**
