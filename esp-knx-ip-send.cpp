@@ -61,7 +61,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	}
 	buf[len - 1] = cs;
 #endif
-	
+
 	DEBUG_PRINT(F("Sending packet:"));
 	for (int i = 0; i < len; ++i)
 	{
@@ -176,4 +176,16 @@ void ESPKNXIP::send_4byte_float(address_t const &receiver, knx_command_type_t ct
 {
 	uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
 	send(receiver, ct, 5, buf);
+}
+
+void ESPKNXIP::send_14byte_string(address_t const &receiver, knx_command_type_t ct, const char *val)
+{
+	uint8_t buf[14];
+	int len = strlen(val);
+	if (len > 14)
+	{
+		len = 14;
+	}
+	memcpy(buf, val, len);
+	send(receiver, ct, 14, buf);
 }
