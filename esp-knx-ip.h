@@ -37,7 +37,7 @@
 #define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
+// #define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
