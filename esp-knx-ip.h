@@ -44,11 +44,11 @@
 
 #include "Arduino.h"
 #include <EEPROM.h>
-#ifndef KNX_IP_DISABLE_WEBSERVER
 #include <ESP8266WiFi.h>
-#endif
 #include <WiFiUdp.h>
+#ifndef KNX_IP_DISABLE_WEBSERVER
 #include <ESP8266WebServer.h>
+#endif
 
 #include "DPT.h"
 
