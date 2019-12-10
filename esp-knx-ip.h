@@ -32,8 +32,12 @@
 #define DISABLE_RESTORE_BUTTON    0 // [Default 0] Set to 1 to disable the "restore defaults" button in the web ui.
 
 // These values normally don't need adjustment
+#ifndef MULTICAST_PORT
 #define MULTICAST_PORT            3671 // [Default 3671]
+#endif
+#ifndef MULTICAST_IP
 #define MULTICAST_IP              IPAddress(224, 0, 23, 12) // [Default IPAddress(224, 0, 23, 12)]
+#endif
 #define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
