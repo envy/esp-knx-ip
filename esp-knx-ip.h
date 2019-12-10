@@ -41,7 +41,7 @@
 #define SEND_CHECKSUM             0
 
 // Uncomment to enable printing out debug messages.
-#define ESP_KNX_DEBUG
+// #define ESP_KNX_DEBUG
 /**
  * END CONFIG
  */
@@ -50,7 +50,9 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
+#ifndef KNX_IP_DISABLE_WEBSERVER
 #include <ESP8266WebServer.h>
+#endif
 
 #include "DPT.h"
 
@@ -362,7 +364,9 @@ class ESPKNXIP {
     ESPKNXIP();
     void load();
     void start();
+  #ifndef KNX_IP_DISABLE_WEBSERVER
     void start(ESP8266WebServer *srv);
+  #endif
     void loop();
 
     void save_to_eeprom();
@@ -519,7 +523,9 @@ class ESPKNXIP {
     callback_assignment_id_t __callback_register_assignment(address_t address, callback_id_t id);
     void __callback_delete_assignment(callback_assignment_id_t id);
 
+  #ifndef KNX_IP_DISABLE_WEBSERVER
     ESP8266WebServer *server;
+  #endif
     address_t physaddr;
     WiFiUDP udp;
 

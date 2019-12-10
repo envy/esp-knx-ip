@@ -6,6 +6,7 @@
 
 #include "esp-knx-ip.h"
 
+#ifndef KNX_IP_DISABLE_WEBSERVER
 void ESPKNXIP::__handle_root()
 {
   String m = F("<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>");
@@ -521,4 +522,5 @@ end:
   server->sendHeader(F("Location"),F(__ROOT_PATH));
   server->send(302);
 }
+#endif
 #endif
