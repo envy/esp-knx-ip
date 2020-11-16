@@ -175,7 +175,7 @@ void ESPKNXIP::send_4byte_uint(address_t const &receiver, knx_command_type_t ct,
 void ESPKNXIP::send_4byte_float(address_t const &receiver, knx_command_type_t ct, float val)
 {
 	union { float f; uint32_t i; } num;
-        num.f = val;
+	num.f = val;
 	uint8_t buf[] = {0x00,
 	                 (uint8_t)((num.i & 0xFF000000) >> 24),
 	                 (uint8_t)((num.i & 0x00FF0000) >> 16),
