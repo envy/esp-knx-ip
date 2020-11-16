@@ -84,6 +84,6 @@ uint32_t ESPKNXIP::data_to_4byte_uint(uint8_t *data)
 float ESPKNXIP::data_to_4byte_float(uint8_t *data)
 {
 	union { float f; uint32_t i; } num;
-        num.i = (uint32_t)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) | (data[4] << 0));
+	num.i = (uint32_t)((data[1] << 24) | (data[2] << 16) | (data[3] << 8) | (data[4] << 0));
 	return num.f;
 }
