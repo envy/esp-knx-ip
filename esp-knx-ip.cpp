@@ -27,15 +27,27 @@ void ESPKNXIP::load()
   restore_from_eeprom();
 }
 
+#ifdef ESP32
+void ESPKNXIP::start(WebServer *srv)
+{
+  server = srv;
+  __start();
+}
+#else 
 void ESPKNXIP::start(ESP8266WebServer *srv)
 {
   server = srv;
   __start();
 }
+#endif
 
 void ESPKNXIP::start()
 {
-  server = new ESP8266WebServer(80);
+    #ifdef ESP32
+        server = new WebServer(80);
+    #else
+        server = new ESP8266WebServer(80);
+    #endif
   __start();
 }
 
@@ -82,7 +94,11 @@ void ESPKNXIP::__start()
     server->begin();
   }
 
-  udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
+  #ifdef ESP32
+    udp.beginMulticast(MULTICAST_IP, MULTICAST_PORT);
+  #else
+    udp.beginMulticast(WiFi.localIP(),  MULTICAST_IP, MULTICAST_PORT);
+  #endif
 }
 
 void ESPKNXIP::save_to_eeprom()
