@@ -61,7 +61,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	}
 	buf[len - 1] = cs;
 #endif
-
+	
 	DEBUG_PRINT(F("Sending packet:"));
 	for (int i = 0; i < len; ++i)
 	{
@@ -70,7 +70,11 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	}
 	DEBUG_PRINTLN(F(""));
 
-	udp.beginPacketMulticast(MULTICAST_IP, MULTICAST_PORT, WiFi.localIP());
+	#ifdef ESP32
+		udp.beginMulticastPacket();
+	#else
+		udp.beginPacketMulticast(MULTICAST_IP, MULTICAST_PORT, WiFi.localIP());
+	#endif
 	udp.write(buf, len);
 	udp.endPacket();
 }
@@ -125,7 +129,11 @@ void ESPKNXIP::send_2byte_float(address_t const &receiver, knx_command_type_t ct
 	++e;
 	for (; v > 2047.0f; v /= 2)
 	++e;
-	long m = (long)round(v) & 0x7FF;
+	#ifdef ESP32
+		long m = pow(round(v), 0x7FF);
+	#else
+		long m = round(v) & 0x7FF;
+	#endif
 	short msb = (short) (e << 3 | m >> 8);
 	if (val < 0.0f)
 	msb |= 0x80;
@@ -176,18 +184,4 @@ void ESPKNXIP::send_4byte_float(address_t const &receiver, knx_command_type_t ct
 {
 	uint8_t buf[] = {0x00, ((uint8_t *)&val)[3], ((uint8_t *)&val)[2], ((uint8_t *)&val)[1], ((uint8_t *)&val)[0]};
 	send(receiver, ct, 5, buf);
-}
-
-void ESPKNXIP::send_14byte_string(address_t const &receiver, knx_command_type_t ct, const char *val)
-{
-	// DPT16 strings are always 14 bytes long, however the data array is one larger due to the telegram structure.
-	// The first byte needs to be zero, string start after that.
-	uint8_t buf[15] = {0x00};
-	int len = strlen(val);
-	if (len > 14)
-	{
-		len = 14;
-	}
-	memcpy(buf+1, val, len);
-	send(receiver, ct, 15, buf);
 }
