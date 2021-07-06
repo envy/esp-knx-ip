@@ -73,6 +73,7 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	udp.beginPacketMulticast(MULTICAST_IP, MULTICAST_PORT, WiFi.localIP());
 	udp.write(buf, len);
 	udp.endPacket();
+	delay(1);
 }
 
 void ESPKNXIP::send_1bit(address_t const &receiver, knx_command_type_t ct, uint8_t bit)
