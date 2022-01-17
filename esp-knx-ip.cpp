@@ -384,13 +384,7 @@ void ESPKNXIP::__loop_knx()
   if (cemi_msg->message_code != KNX_MT_L_DATA_IND)
     return;
 
-  DEBUG_PRINT(F("ADDI: 0x"));
-  DEBUG_PRINTLN(cemi_msg->additional_info_len, 16);
-
   cemi_service_t *cemi_data = &cemi_msg->data.service_information;
-
-  if (cemi_msg->additional_info_len > 0)
-    cemi_data = (cemi_service_t *)(((uint8_t *)cemi_data) + cemi_msg->additional_info_len);
 
   DEBUG_PRINT(F("C1: 0x"));
   DEBUG_PRINTLN(cemi_data->control_1.byte, 16);

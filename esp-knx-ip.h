@@ -253,10 +253,8 @@ typedef struct __cemi_service
 typedef struct __cemi_msg
 {
   uint8_t message_code;
-  uint8_t additional_info_len;
   union
   {
-    cemi_addi_t additional_info[];
     cemi_service_t service_information;
   } data;
 } cemi_msg_t;

@@ -29,7 +29,6 @@ void ESPKNXIP::send(address_t const &receiver, knx_command_type_t ct, uint8_t da
 	knx_pkt->total_len.len = __ntohs(len);
 	cemi_msg_t *cemi_msg = (cemi_msg_t *)knx_pkt->pkt_data;
 	cemi_msg->message_code = KNX_MT_L_DATA_IND;
-	cemi_msg->additional_info_len = 0;
 	cemi_service_t *cemi_data = &cemi_msg->data.service_information;
 	cemi_data->control_1.bits.confirm = 0;
 	cemi_data->control_1.bits.ack = 0;
